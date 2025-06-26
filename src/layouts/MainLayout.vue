@@ -10,12 +10,14 @@
           aria-label="Menu"
           @click="toggleLeftDrawer"
         />
-
+        <q-avatar square>
+          <img src="favicon.ico">
+        </q-avatar>
         <q-toolbar-title>
-          Quasar App
+          E-Find
         </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
+        
       </q-toolbar>
     </q-header>
 
