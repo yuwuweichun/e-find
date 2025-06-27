@@ -62,6 +62,14 @@
               留言板
             </q-item-section>
           </q-item>
+          <q-item clickable v-ripple to="/user">
+            <q-item-section avatar>
+              <q-icon name="account_circle" />
+            </q-item-section>
+            <q-item-section>
+              个人中心
+            </q-item-section>
+          </q-item>
         </q-list>
       </q-scroll-area>
     </q-drawer>
@@ -88,16 +96,8 @@ const $q = useQuasar()
 
 // 根据当前路由设置选中的标签
 const updateTab = () => {
-  const path = route.path
-  if (path === '/') {
-    tab.value = 'home'
-  } else if (path === '/lose') {
-    tab.value = 'lose'
-  } else if (path === '/find') {
-    tab.value = 'find'
-  } else if (path === '/message') {
-    tab.value = 'message'
-  }
+  const path = route.path.replace('/', '')
+  tab.value = path === '' ? 'home' : path
 }
 
 // 监听路由变化

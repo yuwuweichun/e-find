@@ -7,6 +7,7 @@ const routes = [
       { path: 'lose', component: () => import('pages/LosePage.vue') },
       { path: 'find', component: () => import('pages/FindPage.vue') },
       { path: 'message', component: () => import('pages/MessagePage.vue') },
+      { path: 'user', component: () => import('pages/UserPage.vue') },
     ],
   },
 
