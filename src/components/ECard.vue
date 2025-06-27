@@ -1,6 +1,6 @@
 <template>
-  <div class="q-pa-md row items-start q-gutter-md">
-    <q-card class="my-card" flat bordered>
+  <div class="row justify-center q-gutter-md">
+    <q-card class="my-card" bordered>
       <q-img
         src="https://cdn.quasar.dev/img/parallax2.jpg"
       />

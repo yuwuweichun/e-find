@@ -1,5 +1,23 @@
 <template>
   <q-page class="q-pa-md">
+
+    <!-- 轮播图 -->
+    <div class="q-pa-md">
+      <q-carousel
+        swipeable
+        animated
+        v-model="slide"
+        thumbnails
+        infinite
+      >
+        <q-carousel-slide :name="1" img-src="https://cdn.quasar.dev/img/mountains.jpg" />
+        <q-carousel-slide :name="2" img-src="https://cdn.quasar.dev/img/parallax1.jpg" />
+        <q-carousel-slide :name="3" img-src="https://cdn.quasar.dev/img/parallax2.jpg" />
+        <q-carousel-slide :name="4" img-src="https://cdn.quasar.dev/img/quasar.jpg" />
+      </q-carousel>
+    </div>
+
+
     <!--搜索框-->
     <div class="row justify-center">
       <q-input
@@ -19,7 +37,7 @@
     </div>
 
     <!-- 卡片显示区 -->
-    <div class="row justify-center">
+    <div class="q-pa-md row justify-center">
       <div class="col-xs-12 col-sm-4" v-for="n in currentCards" :key="n">
         <ECard />
       </div>
@@ -56,6 +74,9 @@
 <script setup>
 import { ref, computed } from 'vue'
 import ECard from 'components/ECard.vue'
+
+// 轮播图
+const slide = ref(1)
 
 // 模拟33个卡片
 const cards = Array.from({ length: 33 }, (_, i) => i + 1)
