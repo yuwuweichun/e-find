@@ -2,18 +2,18 @@
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
       <q-toolbar>
-        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
+
         <q-avatar circle>
           <img src="favicon.ico">
         </q-avatar>
         <q-toolbar-title>
           易寻 校园失物招领平台
         </q-toolbar-title>
-
+        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
       </q-toolbar>
     </q-header>
 
-    <q-drawer v-model="leftDrawerOpen" show-if-above :width="300" :breakpoint="400">
+    <q-drawer v-model="leftDrawerOpen" show-if-above :width="300" :breakpoint="400" overlay>
       <q-img class="absolute-top" src="https://cdn.quasar.dev/img/material.png" style="height: 150px">
         <div class="absolute-bottom bg-transparent">
           <q-avatar size="56px" class="q-mb-sm">
