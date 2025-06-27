@@ -13,40 +13,71 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
-      <q-list>
-        <q-item-label header>
-          Essential Links
-        </q-item-label>
-
-        <EssentialLink v-for="link in linksList" :key="link.title" v-bind="link" />
-      </q-list>
+    <q-drawer v-model="leftDrawerOpen" show-if-above :width="300" :breakpoint="400">
+      <q-img class="absolute-top" src="https://cdn.quasar.dev/img/material.png" style="height: 150px">
+        <div class="absolute-bottom bg-transparent">
+          <q-avatar size="56px" class="q-mb-sm">
+            <img :src="anbyAvatar" style="object-fit: cover; width: 100%; height: 100%; object-position: center;" />
+          </q-avatar>
+          <div class="text-weight-bold">Razvan Stoenescu</div>
+          <div>@rstoenescu</div>
+        </div>
+      </q-img>
+      <q-scroll-area style="height: calc(100% - 150px); margin-top: 150px; border-right: 1px solid #ddd">
+        <q-list padding>
+          <q-item clickable v-ripple to="/" exact>
+            <q-item-section avatar>
+              <q-icon name="home" />
+            </q-item-section>
+            <q-item-section>
+              首页
+            </q-item-section>
+          </q-item>
+          <q-item clickable v-ripple to="/lose">
+            <q-item-section avatar>
+              <q-icon name="wrong_location" />
+            </q-item-section>
+            <q-item-section>
+              我丢失了物品
+            </q-item-section>
+          </q-item>
+          <q-item clickable v-ripple to="/find">
+            <q-item-section avatar>
+              <q-icon name="radar" />
+            </q-item-section>
+            <q-item-section>
+              我找到了物品
+            </q-item-section>
+          </q-item>
+          <q-item clickable v-ripple to="/message">
+            <q-item-section avatar>
+              <q-icon name="forum" />
+            </q-item-section>
+            <q-item-section>
+              留言板
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-scroll-area>
     </q-drawer>
 
     <q-page-container>
       <router-view />
     </q-page-container>
 
-    <q-footer>
-      <q-tabs v-model="tab" inline-label class="text-white">
-        <q-route-tab name="home" icon="home" :label="!$q.screen.lt.md ? '首页' : ''" to="/" />
-        <q-route-tab name="lose" icon="wrong_location" :label="!$q.screen.lt.md ? '我丢失了物品' : ''" to="/lose" />
-        <q-route-tab name="find" icon="radar" :label="!$q.screen.lt.md ? '我找到了物品' : ''" to="/find" />
-        <q-route-tab name="message" icon="forum" :label="!$q.screen.lt.md ? '留言板' : ''" to="/message" />
-      </q-tabs>
-    </q-footer>
+
   </q-layout>
 </template>
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { useQuasar } from 'quasar'
-import EssentialLink from 'components/EssentialLink.vue'
+
+import anbyAvatar from 'src/assets/images/anby.png'
 
 const route = useRoute()
 const tab = ref('home')
-const $q = useQuasar()
+
 
 // 根据当前路由设置选中的标签
 const updateTab = () => {
@@ -70,50 +101,7 @@ onMounted(() => {
   updateTab()
 })
 
-const linksList = [
-  {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
-  },
-  {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
-  },
-  {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
-  }
-]
+
 
 const leftDrawerOpen = ref(false)
 
