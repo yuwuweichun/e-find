@@ -13,7 +13,12 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer v-model="leftDrawerOpen" show-if-above :width="300" :breakpoint="400" overlay>
+    <q-drawer
+      v-model="leftDrawerOpen"
+      show-if-above
+      :width="300"
+      :breakpoint="400"
+      :overlay="$q.screen.lt.md">
       <q-img class="absolute-top" src="https://cdn.quasar.dev/img/material.png" style="height: 150px">
         <div class="absolute-bottom bg-transparent">
           <q-avatar size="56px" class="q-mb-sm">
@@ -72,11 +77,13 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useQuasar } from 'quasar'
 
 import anbyAvatar from 'src/assets/images/anby.png'
 
 const route = useRoute()
 const tab = ref('home')
+const $q = useQuasar()
 
 
 // 根据当前路由设置选中的标签
