@@ -22,10 +22,9 @@
       <q-img class="absolute-top" src="https://cdn.quasar.dev/img/material.png" style="height: 150px">
         <div class="absolute-bottom bg-transparent">
           <q-avatar size="56px" class="q-mb-sm">
-            <img :src="anbyAvatar" style="object-fit: cover; width: 100%; height: 100%; object-position: center;" />
+            <img :src="avatar" style="object-fit: cover; width: 100%; height: 100%; object-position: center;" />
           </q-avatar>
-          <div class="text-weight-bold">Razvan Stoenescu</div>
-          <div>@rstoenescu</div>
+          <div class="text-weight-bold">username/请登录</div>
         </div>
       </q-img>
       <q-scroll-area style="height: calc(100% - 150px); margin-top: 150px; border-right: 1px solid #ddd">
@@ -87,7 +86,7 @@ import { ref, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 
-import anbyAvatar from 'src/assets/images/anby.png'
+import avatar from 'src/assets/icons/user_avatar.png'
 
 const route = useRoute()
 const tab = ref('home')
