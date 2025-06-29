@@ -1,6 +1,6 @@
 -- 照片表
 -- 文件名: 003_create_photo_table.sql
--- 描述: 创建物品图片表，存储物品相关的图片信息
+-- 描述: 创建物品图片表，存储物品相关的图片信息,依赖于item表
 
 CREATE TABLE `photo` (
   `id` INT NOT NULL AUTO_INCREMENT COMMENT '主键，自增ID',
