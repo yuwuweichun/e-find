@@ -13,7 +13,7 @@ CREATE TABLE `item` (
   `contact_info` VARCHAR(100) COMMENT '联系方式',
   `status` ENUM('审核中','已通过','未通过') NOT NULL DEFAULT '审核中' COMMENT '审核状态',
   `rejection_reason` TEXT COMMENT '未通过原因，仅状态为未通过时有效',
-  `posted_date` DATE NOT NULL DEFAULT (CURRENT_DATE) COMMENT '发布时间',
+  `posted_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '发布时间',
   PRIMARY KEY (`id`),
   KEY `idx_item_publisher` (`publisher_id`),
   CONSTRAINT `fk_item_user` FOREIGN KEY (`publisher_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
