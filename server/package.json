@@ -1,0 +1,34 @@
+{
+  "name": "e-find-server",
+  "version": "1.0.0",
+  "description": "E-Find Backend Server",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "cors": "^2.8.5",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.0",
+    "dotenv": "^17.0.0",
+    "mysql2": "^3.14.1",
+    "bcryptjs": "^3.0.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.1",
+    "express-validator": "^7.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "keywords": [
+    "express",
+    "backend",
+    "api"
+  ],
+  "author": "SongChun",
+  "license": "MIT"
+}

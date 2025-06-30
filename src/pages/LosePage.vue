@@ -58,6 +58,34 @@
               </q-input>
             </div>
 
+            <div class="form-group">
+              <q-input v-model="form.date" label="丢失日期" type="date" outlined :rules="[val => !!val || '请选择丢失日期']"
+                class="custom-input" bg-color="grey-1">
+                <template v-slot:prepend>
+                  <q-icon name="event" color="orange" />
+                </template>
+              </q-input>
+            </div>
+
+            <div class="form-group">
+              <q-file v-model="form.photos" label="上传图片" outlined multiple accept=".jpg,.jpeg,.png,.gif"
+                class="custom-input" bg-color="grey-1" @rejected="onRejected">
+                <template v-slot:prepend>
+                  <q-icon name="add_photo_alternate" color="orange" />
+                </template>
+              </q-file>
+              <div v-if="form.photos && form.photos.length" class="row q-mt-sm">
+                <div v-for="(photo, index) in form.photos" :key="index" class="col-4 q-pa-xs">
+                  <q-img :src="URL.createObjectURL(photo)" spinner-color="orange" style="height: 100px"
+                    class="rounded-borders">
+                    <div class="absolute-top-right">
+                      <q-btn round flat dense size="sm" icon="close" color="negative" @click="removePhoto(index)" />
+                    </div>
+                  </q-img>
+                </div>
+              </div>
+            </div>
+
             <div class="submit-section">
               <q-btn label="发布失物信息" type="submit" color="orange" size="lg" class="submit-btn" :loading="loading"
                 unelevated>
@@ -90,38 +118,92 @@
 <script setup>
 import { ref } from 'vue'
 import { useQuasar } from 'quasar'
+import { itemAPI } from 'src/services/api.js'
 
 const $q = useQuasar()
+const URL = window.URL
 
 const form = ref({
   title: '',
   description: '',
   location: '',
-  contact: ''
+  contact: '',
+  date: '',
+  photos: []
 })
 
 const loading = ref(false)
 
+const removePhoto = (index) => {
+  form.value.photos.splice(index, 1)
+}
+
+const onRejected = () => {
+  $q.notify({
+    type: 'negative',
+    message: '请上传有效的图片文件（JPG、PNG、GIF）',
+    position: 'top'
+  })
+}
+
 const onSubmit = async () => {
   loading.value = true
 
-  // 模拟提交延迟
-  await new Promise(resolve => setTimeout(resolve, 1000))
+  try {
+    // 先上传图片
+    const photoUrls = []
+    if (form.value.photos && form.value.photos.length) {
+      for (const photo of form.value.photos) {
+        const formData = new FormData()
+        formData.append('image', photo)
+        const response = await fetch('/api/photos/upload', {
+          method: 'POST',
+          body: formData
+        })
+        const result = await response.json()
+        if (result.success) {
+          photoUrls.push(result.data.url)
+        }
+      }
+    }
 
-  // 这里可以添加发布失物信息的逻辑
-  $q.notify({
-    type: 'positive',
-    message: '失物信息发布成功！',
-    icon: 'check_circle',
-    position: 'top'
-  })
+    // 构造请求体
+    const payload = {
+      title: form.value.title,
+      description: form.value.description,
+      location: form.value.location,
+      contact_info: form.value.contact,
+      lost_date: form.value.date,
+      type: 'lost',
+      photos: photoUrls
+    }
 
-  // 重置表单
-  form.value = {
-    title: '',
-    description: '',
-    location: '',
-    contact: ''
+    // 创建失物信息
+    await itemAPI.createItem(payload)
+
+    $q.notify({
+      type: 'positive',
+      message: '失物信息发布成功！',
+      icon: 'check_circle',
+      position: 'top'
+    })
+
+    // 重置表单
+    form.value = {
+      title: '',
+      description: '',
+      location: '',
+      contact: '',
+      date: '',
+      photos: []
+    }
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: error.message || '发布失败，请稍后重试',
+      icon: 'error',
+      position: 'top'
+    })
   }
 
   loading.value = false
