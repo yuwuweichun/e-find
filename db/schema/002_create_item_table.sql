@@ -3,18 +3,18 @@
 -- 描述: 创建失物招领物品表，存储物品信息和发布状态
 
 CREATE TABLE `item` (
-  `id` INT NOT NULL AUTO_INCREMENT COMMENT '主键，自增ID',
-  `publisher_id` INT NOT NULL COMMENT '发布者ID，关联用户表',
-  `type` ENUM('lost','found') NOT NULL COMMENT '物品类型：lost表示丢失，found表示招领',
-  `title` VARCHAR(100) NOT NULL COMMENT '物品标题',
-  `description` TEXT COMMENT '物品详细描述',
-  `location` VARCHAR(255) COMMENT '拾失地点',
-  `lost_date` DATE COMMENT '拾失时间，精确到天',
-  `contact_info` VARCHAR(100) COMMENT '联系方式',
-  `status` ENUM('审核中','已通过','未通过') NOT NULL DEFAULT '审核中' COMMENT '审核状态',
-  `rejection_reason` TEXT COMMENT '未通过原因，仅状态为未通过时有效',
-  `posted_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '发布时间',
+  `id` INT NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment ID',
+  `publisher_id` INT NOT NULL COMMENT 'Publisher ID, references user table',
+  `type` ENUM('lost','found') NOT NULL COMMENT 'Item type: lost indicates lost item, found indicates found item',
+  `title` VARCHAR(100) NOT NULL COMMENT 'Item title',
+  `description` TEXT COMMENT 'Item detailed description',
+  `location` VARCHAR(255) COMMENT 'Lost/found location',
+  `lost_date` DATE COMMENT 'Lost/found date, precise to day',
+  `contact_info` VARCHAR(100) COMMENT 'Contact information',
+  `status` ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending' COMMENT 'Review status: pending, approved, rejected',
+  `rejection_reason` TEXT COMMENT 'Rejection reason, only valid when status is rejected',
+  `posted_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Publication date',
   PRIMARY KEY (`id`),
   KEY `idx_item_publisher` (`publisher_id`),
   CONSTRAINT `fk_item_user` FOREIGN KEY (`publisher_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='失物招领物品表'; 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Lost and found item table'; 

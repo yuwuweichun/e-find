@@ -3,13 +3,13 @@
 -- 描述: 创建用户信息表，存储用户基本信息和认证信息
 
 CREATE TABLE `user` (
-  `id` INT NOT NULL AUTO_INCREMENT COMMENT '主键，自增ID',
-  `username` VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名，用于登录，唯一',
-  `password` VARCHAR(255) NOT NULL COMMENT '用户密码，加密存储',
-  `role` VARCHAR(20) NOT NULL COMMENT '用户类型：普通用户、普通管理员、超级管理员',
-  `phone` VARCHAR(20) COMMENT '用户手机号',
-  `student_no` VARCHAR(20) COMMENT '学号或工号',
-  `full_name` VARCHAR(50) COMMENT '用户真实姓名',
-  `avatar_url` VARCHAR(255) COMMENT '头像图片地址',
+  `id` INT NOT NULL AUTO_INCREMENT COMMENT 'Primary key, auto-increment ID',
+  `username` VARCHAR(50) NOT NULL UNIQUE COMMENT 'Username for login, unique',
+  `password` VARCHAR(255) NOT NULL COMMENT 'User password, encrypted storage',
+  `role` VARCHAR(20) NOT NULL COMMENT 'User type: regular user, regular admin, super admin',
+  `phone` VARCHAR(20) COMMENT 'User phone number',
+  `student_no` VARCHAR(20) COMMENT 'Student ID or employee ID',
+  `full_name` VARCHAR(50) COMMENT 'User real name',
+  `avatar_url` VARCHAR(255) COMMENT 'Avatar image URL',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户信息表'; 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='User information table'; 
