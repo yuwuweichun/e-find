@@ -115,6 +115,7 @@ import { useQuasar } from 'quasar'
 import { itemAPI } from 'src/services/api.js'
 
 const $q = useQuasar()
+const URL = window.URL
 
 const form = ref({
   title: '',

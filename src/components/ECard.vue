@@ -2,7 +2,8 @@
   <div class="row justify-center q-gutter-md">
     <q-card class="my-card" bordered>
       <!-- 物品图片，如果有图片则显示，否则显示默认图片 -->
-      <q-img :src="item.photoUrl || defaultImg" />
+      <q-img :src="getImgUrl(item) || defaultImg" :ratio="16 / 9" style="min-height: 120px;"
+        @error="() => { console.log('图片加载失败', getImgUrl(item)) }" />
 
       <q-card-section>
         <!-- 发布时间 -->
@@ -64,6 +65,7 @@ export default {
     }
   },
   setup(props) {
+    console.log('ECard item:', props.item)
     const expanded = ref(false)
     const defaultImg = 'https://cdn.quasar.dev/img/parallax2.jpg'
     // 状态文字
@@ -81,7 +83,23 @@ export default {
         navigator.clipboard.writeText(props.item.contact_info)
       }
     }
-    return { expanded, defaultImg, statusText, copyContact }
+    // 获取图片url
+    function getImgUrl(item) {
+      if (Array.isArray(item.photos) && item.photos.length > 0) {
+        return item.photos[0]
+      }
+      if (typeof item.photos === 'string') {
+        try {
+          const arr = JSON.parse(item.photos)
+          if (Array.isArray(arr) && arr.length > 0) return arr[0]
+        } catch { /* ignore JSON parse error */ }
+      }
+      if (item.photo_url) return item.photo_url
+      if (item.photoUrl) return item.photoUrl
+      // 兜底：返回 null，外层用 || defaultImg
+      return null
+    }
+    return { expanded, defaultImg, statusText, copyContact, getImgUrl }
   }
 }
 </script>

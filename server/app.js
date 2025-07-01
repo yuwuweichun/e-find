@@ -3,6 +3,8 @@ import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import dotenv from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
 // 导入路由
 import authRoutes from './routes/auth.js'
@@ -20,6 +22,9 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 3000
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 // 中间件配置
 app.use(helmet()) // 安全头
 app.use(
@@ -32,8 +37,8 @@ app.use(morgan('combined')) // 日志记录
 app.use(express.json()) // 解析JSON请求体
 app.use(express.urlencoded({ extended: true })) // 解析URL编码请求体
 
-// 静态文件服务
-app.use('/uploads', express.static('uploads'))
+// 静态资源映射
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 // 路由配置
 app.use('/api/auth', authRoutes)

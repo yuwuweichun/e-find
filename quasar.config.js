@@ -8,7 +8,7 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
 
-import { configure } from "quasar/wrappers"
+import { configure } from 'quasar/wrappers'
 
 export default configure(function (/* ctx */) {
   return {
@@ -88,6 +88,10 @@ export default configure(function (/* ctx */) {
           target: 'http://localhost:3000',
           changeOrigin: true,
           pathRewrite: { '^/api': '/api' },
+        },
+        '/uploads': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
         },
       },
       // https: true
