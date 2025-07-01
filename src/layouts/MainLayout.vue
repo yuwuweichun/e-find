@@ -97,6 +97,8 @@ const displayName = computed(() => userStore.displayName)
 function handleUserClick() {
   if (!userStore.isLoggedIn) {
     router.push('/auth/login')
+  } else {
+    router.push('/user')
   }
 }
 

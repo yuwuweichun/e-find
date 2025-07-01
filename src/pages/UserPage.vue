@@ -13,7 +13,7 @@
           </q-avatar>
         </div>
         <div class="user-details">
-          <h2 class="user-name">{{ user.value?.username || '未登录' }}</h2>
+          <h2 class="user-name">{{ displayName }}</h2>
           <p class="user-email">{{ user.value?.phone || user.value?.student_no || '' }}</p>
           <div class="user-stats">
             <div class="stat-item">
@@ -279,6 +279,7 @@ userStore.fetchProfile()
 
 const avatar = computed(() => userStore.avatar)
 const user = computed(() => userStore.user)
+const displayName = computed(() => userStore.displayName)
 
 // 响应式数据
 const activeTab = ref('all')
