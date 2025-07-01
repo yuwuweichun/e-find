@@ -44,7 +44,7 @@
 
             <div class="register-section">
                 <p class="register-text">还没有账号？</p>
-                <q-btn label="立即注册" color="primary" outline class="register-btn" @click="$router.push('/register')" />
+                <q-btn label="立即注册" color="primary" outline class="register-btn" @click="$router.push('register')" />
             </div>
         </div>
     </q-page>

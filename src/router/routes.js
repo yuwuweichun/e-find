@@ -32,7 +32,7 @@ const routes = [
     component: () => import('layouts/AuthLayout.vue'),
     children: [
       { path: 'login', component: () => import('pages/LoginPage.vue') },
-      // { path: 'register', component: () => import('pages/RegisterPage.vue') }, // 暂时注释掉，等组件创建后再启用
+      { path: 'register', component: () => import('pages/RegisterPage.vue') },
     ],
   },
 

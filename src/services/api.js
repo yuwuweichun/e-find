@@ -94,6 +94,14 @@ export const userAPI = {
       body: JSON.stringify(passwordData),
     })
   },
+
+  // 注册新用户
+  register: (userData) => {
+    return request('/api/users/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    })
+  },
 }
 
 // 物品相关API

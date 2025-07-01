@@ -201,4 +201,55 @@ router.put(
   },
 )
 
+// 注册接口
+router.post(
+  '/register',
+  [
+    body('username').isLength({ min: 3, max: 50 }).withMessage('用户名长度需在3-50之间'),
+    body('password').isLength({ min: 6 }).withMessage('密码长度至少6位'),
+    body('phone').optional().isMobilePhone('zh-CN').withMessage('请输入有效手机号'),
+    body('student_no').optional().isLength({ min: 1, max: 20 }),
+    body('full_name').optional().isLength({ min: 1, max: 50 }),
+    body('avatar_url').optional().isURL().withMessage('头像URL格式不正确'),
+  ],
+  async (req, res) => {
+    // 校验输入
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res
+        .status(400)
+        .json({ success: false, message: '输入校验失败', errors: errors.array() })
+    }
+    const { username, password, phone, student_no, full_name, avatar_url } = req.body
+    try {
+      // 检查用户名是否已存在
+      const users = await query('SELECT id FROM user WHERE username = ?', [username])
+      if (users.length > 0) {
+        return res.status(409).json({ success: false, message: '用户名已存在' })
+      }
+      // 加密密码
+      const bcrypt = await import('bcryptjs')
+      const saltRounds = 10
+      const hashedPassword = await bcrypt.hash(password, saltRounds)
+      // 插入新用户
+      await query(
+        'INSERT INTO user (username, password, role, phone, student_no, full_name, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [
+          username,
+          hashedPassword,
+          'user',
+          phone || null,
+          student_no || null,
+          full_name || null,
+          avatar_url || null,
+        ],
+      )
+      return res.json({ success: true, message: '注册成功' })
+    } catch (error) {
+      console.error('注册失败:', error)
+      return res.status(500).json({ success: false, message: '注册失败，请稍后重试' })
+    }
+  },
+)
+
 export default router
