@@ -4,7 +4,7 @@
       <q-toolbar>
 
         <q-avatar circle>
-          <img src="favicon.ico">
+          <img src="/favicon.ico">
         </q-avatar>
         <q-toolbar-title>
           易寻 校园失物招领平台
@@ -13,18 +13,13 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer
-      v-model="leftDrawerOpen"
-      show-if-above
-      :width="300"
-      :breakpoint="400"
-      :overlay="$q.screen.lt.md">
+    <q-drawer v-model="leftDrawerOpen" show-if-above :width="300" :breakpoint="400" :overlay="$q.screen.lt.md">
       <q-img class="absolute-top" src="https://cdn.quasar.dev/img/material.png" style="height: 150px">
         <div class="absolute-bottom bg-transparent">
-          <q-avatar size="56px" class="q-mb-sm">
+          <q-avatar size="56px" class="q-mb-sm" @click="handleUserClick" style="cursor:pointer;">
             <img :src="avatar" style="object-fit: cover; width: 100%; height: 100%; object-position: center;" />
           </q-avatar>
-          <div class="text-weight-bold">username/请登录</div>
+          <div class="text-weight-bold" @click="handleUserClick" style="cursor:pointer;">{{ displayName }}</div>
         </div>
       </q-img>
       <q-scroll-area style="height: calc(100% - 150px); margin-top: 150px; border-right: 1px solid #ddd">
@@ -82,16 +77,28 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, watch, onMounted, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
-
-import avatar from 'src/assets/icons/user_avatar.png'
+import { useUserStore } from 'src/stores/user'
 
 const route = useRoute()
+const router = useRouter()
 const tab = ref('home')
 const $q = useQuasar()
 
+const userStore = useUserStore()
+userStore.loadFromStorage()
+userStore.fetchProfile()
+
+const avatar = computed(() => userStore.avatar)
+const displayName = computed(() => userStore.displayName)
+
+function handleUserClick() {
+  if (!userStore.isLoggedIn) {
+    router.push('/auth/login')
+  }
+}
 
 // 根据当前路由设置选中的标签
 const updateTab = () => {
@@ -106,8 +113,6 @@ watch(() => route.path, updateTab)
 onMounted(() => {
   updateTab()
 })
-
-
 
 const leftDrawerOpen = ref(false)
 

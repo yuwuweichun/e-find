@@ -13,8 +13,8 @@
           </q-avatar>
         </div>
         <div class="user-details">
-          <h2 class="user-name">{{ userInfo.name }}</h2>
-          <p class="user-email">{{ userInfo.email }}</p>
+          <h2 class="user-name">{{ user.value?.username || '未登录' }}</h2>
+          <p class="user-email">{{ user.value?.phone || user.value?.student_no || '' }}</p>
           <div class="user-stats">
             <div class="stat-item">
               <span class="stat-number">{{ userInfo.posts }}</span>
@@ -246,18 +246,39 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- 编辑资料弹窗 -->
+    <q-dialog v-model="showEditProfile">
+      <q-card style="min-width:320px;max-width:90vw;">
+        <q-card-section class="text-h6">编辑资料</q-card-section>
+        <q-card-section>
+          <q-input v-model="editForm.full_name" label="真实姓名" />
+          <q-input v-model="editForm.phone" label="手机号" />
+          <q-input v-model="editForm.avatar_url" label="头像URL" />
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="取消" color="primary" v-close-popup :disable="editLoading" />
+          <q-btn flat label="保存" color="primary" :loading="editLoading" @click="saveProfile" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
+import { useUserStore } from 'src/stores/user'
+import { useQuasar } from 'quasar'
 
-import avatar from 'src/assets/icons/user_avatar.png'
-
-const $q = useQuasar()
 const router = useRouter()
+const $q = useQuasar()
+const userStore = useUserStore()
+userStore.loadFromStorage()
+userStore.fetchProfile()
+
+const avatar = computed(() => userStore.avatar)
+const user = computed(() => userStore.user)
 
 // 响应式数据
 const activeTab = ref('all')
@@ -309,11 +330,7 @@ const losePosts = computed(() =>
 
 // 方法
 const editAvatar = () => {
-  $q.notify({
-    type: 'info',
-    message: '头像编辑功能开发中...',
-    position: 'top'
-  })
+  $q.notify({ type: 'info', message: '更换头像功能请在编辑资料中操作' })
 }
 
 const navigateTo = (path) => {
@@ -328,12 +345,33 @@ const viewPost = (post) => {
   })
 }
 
+const showEditProfile = ref(false)
+const editForm = ref({ ...user.value })
+const editLoading = ref(false)
+
+async function saveProfile() {
+  editLoading.value = true
+  try {
+    await userStore.updateProfile({
+      full_name: editForm.value.full_name,
+      phone: editForm.value.phone,
+      avatar_url: editForm.value.avatar_url,
+    })
+    $q.notify({ type: 'positive', message: '资料更新成功' })
+    showEditProfile.value = false
+  } catch (e) {
+    $q.notify({ type: 'negative', message: e.message || '资料更新失败' })
+  }
+  editLoading.value = false
+}
+
 const editProfile = () => {
-  $q.notify({
-    type: 'info',
-    message: '编辑资料功能开发中...',
-    position: 'top'
-  })
+  showEditProfile.value = true
+  editForm.value = { ...user.value }
+}
+
+const logout = () => {
+  userStore.logout()
 }
 
 const performSearch = () => {
@@ -357,22 +395,6 @@ const formatTime = (timeStr) => {
   if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`
   return date.toLocaleDateString('zh-CN')
-}
-
-const logout = () => {
-  $q.dialog({
-    title: '确认退出',
-    message: '您确定要退出登录吗？',
-    cancel: true,
-    persistent: true
-  }).onOk(() => {
-    $q.notify({
-      type: 'positive',
-      message: '已退出登录',
-      position: 'top'
-    })
-    // 这里可以添加退出登录的逻辑
-  })
 }
 </script>
 
