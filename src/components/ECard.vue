@@ -1,6 +1,6 @@
 <template>
   <div class="row justify-center q-gutter-md">
-    <q-card class="my-card" bordered>
+    <q-card class="my-card q-mb-xl" bordered >
       <!-- 物品图片，如果有图片则显示，否则显示默认图片 -->
       <q-img :src="getImgUrl(item) || defaultImg" :ratio="16 / 9" style="min-height: 120px;"
         @error="() => { console.log('图片加载失败', getImgUrl(item)) }" />
@@ -53,54 +53,49 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, computed } from 'vue'
+import defaultImg from '@/assets/images/default.png'
 
-export default {
-  name: 'ECard',
-  props: {
-    item: {
-      type: Object,
-      required: true
-    }
-  },
-  setup(props) {
-    console.log('ECard item:', props.item)
-    const expanded = ref(false)
-    const defaultImg = 'https://cdn.quasar.dev/img/parallax2.jpg'
-    // 状态文字
-    const statusText = computed(() => {
-      switch (props.item.status) {
-        case 'pending': return '待审核'
-        case 'approved': return '已通过'
-        case 'rejected': return '已拒绝'
-        default: return '未知'
-      }
-    })
-    // 复制联系方式
-    function copyContact() {
-      if (props.item.contact_info) {
-        navigator.clipboard.writeText(props.item.contact_info)
-      }
-    }
-    // 获取图片url
-    function getImgUrl(item) {
-      if (Array.isArray(item.photos) && item.photos.length > 0) {
-        return item.photos[0]
-      }
-      if (typeof item.photos === 'string') {
-        try {
-          const arr = JSON.parse(item.photos)
-          if (Array.isArray(arr) && arr.length > 0) return arr[0]
-        } catch { /* ignore JSON parse error */ }
-      }
-      if (item.photo_url) return item.photo_url
-      if (item.photoUrl) return item.photoUrl
-      // 兜底：返回 null，外层用 || defaultImg
-      return null
-    }
-    return { expanded, defaultImg, statusText, copyContact, getImgUrl }
+const props = defineProps({
+  item: {
+    type: Object,
+    required: true
   }
+})
+
+console.log('ECard item:', props.item)
+const expanded = ref(false)
+// 状态文字
+const statusText = computed(() => {
+  switch (props.item.status) {
+    case 'pending': return '待审核'
+    case 'approved': return '已通过'
+    case 'rejected': return '已拒绝'
+    default: return '未知'
+  }
+})
+// 复制联系方式
+function copyContact() {
+  if (props.item.contact_info) {
+    navigator.clipboard.writeText(props.item.contact_info)
+  }
+}
+// 获取图片url
+function getImgUrl(item) {
+  if (Array.isArray(item.photos) && item.photos.length > 0) {
+    return item.photos[0]
+  }
+  if (typeof item.photos === 'string') {
+    try {
+      const arr = JSON.parse(item.photos)
+      if (Array.isArray(arr) && arr.length > 0) return arr[0]
+    } catch { /* ignore JSON parse error */ }
+  }
+  if (item.photo_url) return item.photo_url
+  if (item.photoUrl) return item.photoUrl
+  // 兜底：返回 null，外层用 || defaultImg
+  return null
 }
 </script>
 
