@@ -49,16 +49,6 @@
                     </q-item-section>
                   </q-item>
                   <q-separator />
-                  <q-item clickable v-ripple @click="manageCategories">
-                    <q-item-section avatar>
-                      <q-icon name="category" color="green" />
-                    </q-item-section>
-                    <q-item-section>分类管理</q-item-section>
-                    <q-item-section side>
-                      <q-icon name="chevron_right" color="grey-6" />
-                    </q-item-section>
-                  </q-item>
-                  <q-separator />
                   <q-item clickable v-ripple @click="reviewItems">
                     <q-item-section avatar>
                       <q-icon name="rate_review" color="orange" />
@@ -207,6 +197,8 @@
         </div>
       </div>
     </div>
+    <ItemListDialog v-model="showItemList" />
+    <ItemReviewDialog v-model="showReviewDialog" />
   </q-page>
 </template>
 
@@ -216,6 +208,8 @@ import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useUserStore } from 'src/stores/user'
 import { adminAPI } from 'src/services/api'
+import ItemListDialog from 'src/components/ItemListDialog.vue'
+import ItemReviewDialog from 'src/components/ItemReviewDialog.vue'
 
 const router = useRouter()
 const $q = useQuasar()
@@ -251,17 +245,16 @@ const statsList = ref([
   { icon: 'pending', color: 'red', value: 0, label: '待处理' }
 ])
 
+const showItemList = ref(false)
+const showReviewDialog = ref(false)
+
 // 管理功能方法
 const viewAllItems = () => {
-  $q.notify({ type: 'info', message: '查看所有物品功能开发中...' })
-}
-
-const manageCategories = () => {
-  $q.notify({ type: 'info', message: '分类管理功能开发中...' })
+  showItemList.value = true
 }
 
 const reviewItems = () => {
-  $q.notify({ type: 'info', message: '审核物品功能开发中...' })
+  showReviewDialog.value = true
 }
 
 const viewAllUsers = () => {
