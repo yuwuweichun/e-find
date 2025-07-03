@@ -192,6 +192,29 @@ export const photoAPI = {
   },
 }
 
+// 留言相关API
+export const messageAPI = {
+  // 获取留言列表
+  getMessages: (page = 1, pageSize = 10) => {
+    return request(`/api/messages?page=${page}&pageSize=${pageSize}`)
+  },
+  // 发布留言
+  postMessage: (content, parent_id = null) => {
+    return request('/api/messages', {
+      method: 'POST',
+      body: JSON.stringify({ content, parent_id }),
+    })
+  },
+  // 点赞
+  likeMessage: (id) => {
+    return request(`/api/messages/${id}/like`, { method: 'POST' })
+  },
+  // 取消点赞
+  unlikeMessage: (id) => {
+    return request(`/api/messages/${id}/like`, { method: 'DELETE' })
+  },
+}
+
 // 工具函数
 export const apiUtils = {
   // 检查是否已登录
@@ -247,5 +270,6 @@ export default {
   user: userAPI,
   item: itemAPI,
   photo: photoAPI,
+  message: messageAPI,
   utils: apiUtils,
 }

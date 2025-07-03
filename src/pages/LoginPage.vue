@@ -76,6 +76,8 @@ const onSubmit = async () => {
       // 保存到 pinia
       userStore.setToken(response.data.token)
       userStore.setUser(response.data.user)
+      // 关键：保存到 localStorage，api.js 才能自动带 token
+      localStorage.setItem('token', response.data.token)
 
       $q.notify({
         type: 'positive',

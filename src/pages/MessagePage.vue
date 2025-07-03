@@ -23,15 +23,6 @@
         <q-card-section class="form-section">
           <q-form @submit="onSubmit" class="q-gutter-lg">
             <div class="form-group">
-              <q-input v-model="form.author" label="昵称" outlined :rules="[val => !!val || '请输入昵称']" class="custom-input"
-                bg-color="grey-1">
-                <template v-slot:prepend>
-                  <q-icon name="person" color="teal" />
-                </template>
-              </q-input>
-            </div>
-
-            <div class="form-group">
               <q-input v-model="form.content" label="留言内容" type="textarea" outlined :rules="[val => !!val || '请输入留言内容']"
                 class="custom-input" bg-color="grey-1" rows="4" autogrow>
                 <template v-slot:prepend>
@@ -39,7 +30,6 @@
                 </template>
               </q-input>
             </div>
-
             <div class="submit-section">
               <q-btn label="发布留言" type="submit" color="teal" size="lg" class="submit-btn" :loading="loading" unelevated>
                 <template v-slot:loading>
@@ -76,15 +66,14 @@
                 <q-card-section class="message-content">
                   <div class="message-header">
                     <div class="user-info">
-                      <q-avatar :color="getAvatarColor(message.author)" text-color="white" class="user-avatar">
-                        {{ message.author.charAt(0).toUpperCase() }}
+                      <q-avatar size="40px" class="user-avatar">
+                        <img :src="message.avatar_url || defaultAvatar" />
                       </q-avatar>
                       <div class="user-details">
-                        <div class="user-name">{{ message.author }}</div>
-                        <div class="message-time">{{ formatTime(message.time) }}</div>
+                        <div class="user-name">{{ message.username }}</div>
+                        <div class="message-time">{{ formatTime(message.created_at) }}</div>
                       </div>
                     </div>
-                    <q-btn flat round color="grey-6" icon="more_vert" size="sm" />
                   </div>
 
                   <div class="message-text">
@@ -92,15 +81,16 @@
                   </div>
 
                   <div class="message-actions">
-                    <q-btn flat round color="grey-6" icon="thumb_up" size="sm" class="action-btn">
-                      <q-tooltip>点赞</q-tooltip>
+                    <q-btn flat round color="teal" :icon="message.liked ? 'thumb_up' : 'thumb_up_off_alt'" size="sm"
+                      class="action-btn" @click="toggleLike(message)">
+                      <q-tooltip>{{ message.liked ? '取消点赞' : '点赞' }}</q-tooltip>
                     </q-btn>
-                    <q-btn flat round color="grey-6" icon="reply" size="sm" class="action-btn">
+                    <span class="like-count">{{ message.like_count }}</span>
+                    <q-btn flat round color="grey-6" icon="reply" size="sm" class="action-btn"
+                      @click="showReplies(message)">
                       <q-tooltip>回复</q-tooltip>
                     </q-btn>
-                    <q-btn flat round color="grey-6" icon="share" size="sm" class="action-btn">
-                      <q-tooltip>分享</q-tooltip>
-                    </q-btn>
+                    <span class="reply-count">{{ message.reply_count }}</span>
                   </div>
                 </q-card-section>
               </q-card>
@@ -113,86 +103,79 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import defaultAvatar from 'src/assets/icons/user_avatar.png'
+import { messageAPI } from 'src/services/api'
 
 const $q = useQuasar()
-
-const form = ref({
-  author: '',
-  content: ''
-})
-
+const form = ref({ content: '' })
 const loading = ref(false)
+const messages = ref([])
 
-const messages = ref([
-  {
-    id: 1,
-    author: '张三',
-    content: '这个平台真的很方便，帮我找到了丢失的钥匙！感谢所有好心人的帮助，让我感受到了社会的温暖。',
-    time: '2024-01-15 14:30'
-  },
-  {
-    id: 2,
-    author: '李四',
-    content: '感谢好心人帮我找到了钱包，谢谢！里面的证件对我很重要，真的非常感谢！',
-    time: '2024-01-14 16:20'
-  },
-  {
-    id: 3,
-    author: '王五',
-    content: '今天在图书馆捡到了一部手机，已经通过这个平台联系到失主了。希望大家都能互帮互助！',
-    time: '2024-01-13 09:15'
+// 获取留言列表
+const fetchMessages = async () => {
+  try {
+    const res = await messageAPI.getMessages()
+    console.log('留言接口返回：', res)
+    const msgList = res.messages || res.data?.messages || []
+    console.log('msgList:', msgList)
+    messages.value = Array.isArray(msgList) ? msgList.map(msg => ({ ...msg, liked: false })) : []
+  } catch (e) {
+    console.error(e)
+    $q.notify({ type: 'negative', message: '获取留言失败' })
   }
-])
-
-const getAvatarColor = (name) => {
-  const colors = ['primary', 'secondary', 'accent', 'positive', 'negative', 'info', 'warning']
-  const index = name.charCodeAt(0) % colors.length
-  return colors[index]
 }
 
+onMounted(fetchMessages)
+
+// 发布留言
+const onSubmit = async () => {
+  loading.value = true
+  try {
+    await messageAPI.postMessage(form.value.content)
+    $q.notify({ type: 'positive', message: '留言发布成功！' })
+    form.value.content = ''
+    await fetchMessages()
+  } catch (e) {
+    console.error(e)
+    $q.notify({ type: 'negative', message: '留言发布失败' })
+  }
+  loading.value = false
+}
+
+// 点赞/取消点赞
+const toggleLike = async (message) => {
+  try {
+    if (message.liked) {
+      await messageAPI.unlikeMessage(message.id)
+      message.like_count--
+    } else {
+      await messageAPI.likeMessage(message.id)
+      message.like_count++
+    }
+    message.liked = !message.liked
+  } catch (e) {
+    console.error(e)
+    $q.notify({ type: 'negative', message: '操作失败' })
+  }
+}
+
+// 展示回复（可后续实现弹窗）
+const showReplies = (message) => {
+  console.log(message)
+  $q.notify({ type: 'info', message: '后续可实现留言详情和回复功能' })
+}
+
+// 时间格式化
 const formatTime = (timeStr) => {
   const date = new Date(timeStr)
   const now = new Date()
   const diff = now - date
-
   if (diff < 60000) return '刚刚'
   if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`
   return date.toLocaleDateString('zh-CN')
-}
-
-const onSubmit = async () => {
-  loading.value = true
-
-  // 模拟提交延迟
-  await new Promise(resolve => setTimeout(resolve, 1000))
-
-  // 添加新留言
-  const newMessage = {
-    id: Date.now(),
-    author: form.value.author,
-    content: form.value.content,
-    time: new Date().toLocaleString('zh-CN')
-  }
-
-  messages.value.unshift(newMessage)
-
-  $q.notify({
-    type: 'positive',
-    message: '留言发布成功！',
-    icon: 'check_circle',
-    position: 'top'
-  })
-
-  // 重置表单
-  form.value = {
-    author: '',
-    content: ''
-  }
-
-  loading.value = false
 }
 </script>
 
@@ -442,5 +425,12 @@ const onSubmit = async () => {
     height: 36px;
     font-size: 1rem;
   }
+}
+
+.user-avatar img {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
 }
 </style>
