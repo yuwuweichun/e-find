@@ -226,6 +226,17 @@ export const adminAPI = {
     console.log('📊 获取后台统计数据')
     return request('/api/admin/stats')
   },
+  // 获取用户列表（分页）
+  getUsers: (page = 1, pageSize = 10) => {
+    return request(`/api/admin/users?page=${page}&pageSize=${pageSize}`)
+  },
+  // 修改用户角色
+  updateUserRole: (userId, newRole) => {
+    return request(`/api/admin/users/${userId}/role`, {
+      method: 'PUT',
+      body: JSON.stringify({ role: newRole }),
+    })
+  },
 }
 
 // 工具函数

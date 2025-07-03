@@ -199,6 +199,8 @@
     </div>
     <ItemListDialog v-model="showItemList" />
     <ItemReviewDialog v-model="showReviewDialog" />
+    <UserListDialog v-model="showUserList" />
+    <RoleManageDialog v-model="showRoleManage" />
   </q-page>
 </template>
 
@@ -210,6 +212,8 @@ import { useUserStore } from 'src/stores/user'
 import { adminAPI } from 'src/services/api'
 import ItemListDialog from 'src/components/ItemListDialog.vue'
 import ItemReviewDialog from 'src/components/ItemReviewDialog.vue'
+import UserListDialog from 'src/components/UserListDialog.vue'
+import RoleManageDialog from 'src/components/RoleManageDialog.vue'
 
 const router = useRouter()
 const $q = useQuasar()
@@ -247,6 +251,8 @@ const statsList = ref([
 
 const showItemList = ref(false)
 const showReviewDialog = ref(false)
+const showUserList = ref(false)
+const showRoleManage = ref(false)
 
 // 管理功能方法
 const viewAllItems = () => {
@@ -258,11 +264,11 @@ const reviewItems = () => {
 }
 
 const viewAllUsers = () => {
-  $q.notify({ type: 'info', message: '用户列表功能开发中...' })
+  showUserList.value = true
 }
 
 const manageRoles = () => {
-  $q.notify({ type: 'info', message: '角色管理功能开发中...' })
+  showRoleManage.value = true
 }
 
 const userReports = () => {
