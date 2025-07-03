@@ -5,6 +5,7 @@ import morgan from 'morgan'
 import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { dirname } from 'path'
 
 // 导入路由
 import authRoutes from './routes/auth.js'
@@ -13,6 +14,7 @@ import itemRoutes from './routes/items.js'
 import photoRoutes from './routes/photos.js'
 import messagesRouter from './routes/messages.js'
 import adminRoutes from './routes/admin.js'
+import announcementsRouter from './routes/announcements.js'
 
 // 导入中间件
 import { errorHandler, notFound } from './middleware/errorHandler.js'
@@ -25,7 +27,7 @@ const app = express()
 const PORT = process.env.PORT || 3000
 
 const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __dirname = dirname(__filename)
 
 // 中间件配置
 app.use(helmet()) // 安全头
@@ -49,6 +51,7 @@ app.use('/api/items', itemRoutes)
 app.use('/api/photos', photoRoutes)
 app.use('/api/messages', messagesRouter)
 app.use('/api/admin', adminRoutes)
+app.use('/api/announcements', announcementsRouter)
 
 // 健康检查端点
 app.get('/health', async (req, res) => {

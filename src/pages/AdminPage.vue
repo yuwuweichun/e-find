@@ -117,6 +117,16 @@
               </q-card-section>
               <q-card-section class="q-pa-none">
                 <q-list>
+                  <q-item clickable v-ripple @click="publishAnnouncement">
+                    <q-item-section avatar>
+                      <q-icon name="add_circle" color="primary" />
+                    </q-item-section>
+                    <q-item-section>发布公告</q-item-section>
+                    <q-item-section side>
+                      <q-icon name="chevron_right" color="grey-6" />
+                    </q-item-section>
+                  </q-item>
+                  <q-separator />
                   <q-item clickable v-ripple @click="manageAnnouncements">
                     <q-item-section avatar>
                       <q-icon name="announcement" color="primary" />
@@ -201,6 +211,8 @@
     <ItemReviewDialog v-model="showReviewDialog" />
     <UserListDialog v-model="showUserList" />
     <RoleManageDialog v-model="showRoleManage" />
+    <AnnouncementManageDialog v-model="showAnnouncementManage" />
+    <AnnouncementPublishDialog v-model="showAnnouncementPublish" @published="showAnnouncementManage = true" />
   </q-page>
 </template>
 
@@ -214,6 +226,8 @@ import ItemListDialog from 'src/components/ItemListDialog.vue'
 import ItemReviewDialog from 'src/components/ItemReviewDialog.vue'
 import UserListDialog from 'src/components/UserListDialog.vue'
 import RoleManageDialog from 'src/components/RoleManageDialog.vue'
+import AnnouncementManageDialog from 'src/components/AnnouncementManageDialog.vue'
+import AnnouncementPublishDialog from 'src/components/AnnouncementPublishDialog.vue'
 
 const router = useRouter()
 const $q = useQuasar()
@@ -253,6 +267,8 @@ const showItemList = ref(false)
 const showReviewDialog = ref(false)
 const showUserList = ref(false)
 const showRoleManage = ref(false)
+const showAnnouncementManage = ref(false)
+const showAnnouncementPublish = ref(false)
 
 // 管理功能方法
 const viewAllItems = () => {
@@ -275,8 +291,12 @@ const userReports = () => {
   $q.notify({ type: 'info', message: '用户举报功能开发中...' })
 }
 
+const publishAnnouncement = () => {
+  showAnnouncementPublish.value = true
+}
+
 const manageAnnouncements = () => {
-  $q.notify({ type: 'info', message: '公告管理功能开发中...' })
+  showAnnouncementManage.value = true
 }
 
 const systemSettings = () => {

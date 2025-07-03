@@ -21,8 +21,8 @@
             <div class="col">
               <div class="text-h6 text-weight-bold">{{ announcement.title }}</div>
               <div class="text-body2 text-grey q-mt-xs">
-                {{ announcement.content.substring(0, 100) }}{{ announcement.content.length > 100 ? '...'
-                  : '' }}
+                {{ (announcement.content || '').substring(0, 100) }}{{ (announcement.content &&
+                  announcement.content.length > 100) ? '...' : '' }}
               </div>
             </div>
             <div class="col-auto">
@@ -97,6 +97,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { announcementAPI } from 'src/services/api'
 
 const $q = useQuasar()
 
@@ -106,46 +107,14 @@ const announcements = ref([])
 const showAnnouncementDialog = ref(false)
 const selectedAnnouncement = ref(null)
 
-// 模拟公告数据（实际项目中应该从API获取）
-const mockAnnouncements = [
-  {
-    id: 1,
-    title: '平台使用指南',
-    content: '欢迎使用易寻校园失物招领平台！本平台旨在帮助同学们快速找到丢失的物品或归还捡到的物品。使用前请仔细阅读以下指南：1. 发布失物招领信息时请详细描述物品特征；2. 上传清晰的物品照片；3. 及时更新物品状态；4. 保持文明礼貌的交流。如有问题请联系管理员。',
-    author: '系统管理员',
-    priority: 'high',
-    createdAt: new Date('2024-01-15T10:30:00')
-  },
-  {
-    id: 2,
-    title: '寒假期间平台维护通知',
-    content: '寒假期间（1月20日-2月25日），平台将进行系统维护和功能升级。维护期间可能影响部分功能的使用，请同学们提前做好安排。如有紧急情况，请联系值班管理员。',
-    author: '技术部',
-    priority: 'medium',
-    createdAt: new Date('2024-01-10T14:20:00')
-  },
-  {
-    id: 3,
-    title: '关于物品认领的温馨提示',
-    content: '为了确保物品能够准确归还给失主，请同学们在认领物品时提供以下信息：1. 物品的详细描述；2. 丢失的时间和地点；3. 能够证明物品归属的凭证。感谢大家的配合！',
-    author: '客服部',
-    priority: 'normal',
-    createdAt: new Date('2024-01-08T09:15:00')
-  }
-]
-
 // 获取公告列表
 const fetchAnnouncements = async () => {
   try {
     loading.value = true
-    // 模拟API调用延迟
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // 实际项目中这里应该调用API
-    // const response = await api.get('/announcements')
-    // announcements.value = response.data
-
-    announcements.value = mockAnnouncements
+    const res = await announcementAPI.getAll()
+    console.log('公告栏接口返回数据:', res)
+    // 提取 res.data[0] 作为公告数组来源
+    announcements.value = Array.isArray(res.data?.[0]) ? res.data[0] : []
   } catch (error) {
     console.error('获取公告失败:', error)
     $q.notify({

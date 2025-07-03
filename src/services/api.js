@@ -289,6 +289,19 @@ export const apiUtils = {
   },
 }
 
+export const announcementAPI = {
+  getAll: () => request('/api/announcements'),
+  add: (data) =>
+    request('/api/announcements', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  remove: (id) =>
+    request(`/api/announcements/${id}`, {
+      method: 'DELETE',
+    }),
+}
+
 export default {
   auth: authAPI,
   user: userAPI,
@@ -297,4 +310,5 @@ export default {
   message: messageAPI,
   admin: adminAPI,
   utils: apiUtils,
+  announcement: announcementAPI,
 }

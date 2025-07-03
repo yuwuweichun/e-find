@@ -15,3 +15,11 @@ export function ensureAuthenticated(req, res, next) {
     return res.status(401).json({ error: '无效token' })
   }
 }
+
+export function isAdmin(req, res, next) {
+  // 支持 regular admin/super admin
+  if (req.user && (req.user.role === 'regular admin' || req.user.role === 'super admin')) {
+    return next()
+  }
+  return res.status(403).json({ error: '无管理员权限' })
+}
