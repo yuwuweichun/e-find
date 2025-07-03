@@ -215,13 +215,14 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useUserStore } from 'src/stores/user'
+import { adminAPI } from 'src/services/api'
 
 const router = useRouter()
 const $q = useQuasar()
 const userStore = useUserStore()
 
 // 检查管理员权限
-onMounted(() => {
+onMounted(async () => {
   if (!userStore.isAdmin) {
     $q.notify({
       type: 'negative',
@@ -229,15 +230,25 @@ onMounted(() => {
       position: 'top'
     })
     router.push('/')
+    return
+  }
+  try {
+    const data = await adminAPI.getStats()
+    statsList.value[0].value = data.itemCount
+    statsList.value[1].value = data.userCount
+    statsList.value[2].value = data.solvedCount
+    statsList.value[3].value = data.pendingCount
+  } catch (e) {
+    $q.notify({ type: 'negative', message: '获取统计数据失败: ' + (e.message || e) })
   }
 })
 
 // 统计数据
 const statsList = ref([
-  { icon: 'inventory', color: 'primary', value: 156, label: '总物品数' },
-  { icon: 'person', color: 'green', value: 89, label: '注册用户' },
-  { icon: 'check_circle', color: 'orange', value: 124, label: '已解决' },
-  { icon: 'pending', color: 'red', value: 32, label: '待处理' }
+  { icon: 'inventory', color: 'primary', value: 0, label: '总物品数' },
+  { icon: 'person', color: 'green', value: 0, label: '注册用户' },
+  { icon: 'check_circle', color: 'orange', value: 0, label: '已解决' },
+  { icon: 'pending', color: 'red', value: 0, label: '待处理' }
 ])
 
 // 管理功能方法

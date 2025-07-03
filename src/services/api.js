@@ -219,6 +219,15 @@ export const messageAPI = {
   },
 }
 
+// 后台管理相关API
+export const adminAPI = {
+  // 获取统计数据
+  getStats: () => {
+    console.log('📊 获取后台统计数据')
+    return request('/api/admin/stats')
+  },
+}
+
 // 工具函数
 export const apiUtils = {
   // 检查是否已登录
@@ -275,5 +284,6 @@ export default {
   item: itemAPI,
   photo: photoAPI,
   message: messageAPI,
+  admin: adminAPI,
   utils: apiUtils,
 }

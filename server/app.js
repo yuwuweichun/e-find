@@ -12,6 +12,7 @@ import userRoutes from './routes/users.js'
 import itemRoutes from './routes/items.js'
 import photoRoutes from './routes/photos.js'
 import messagesRouter from './routes/messages.js'
+import adminRoutes from './routes/admin.js'
 
 // 导入中间件
 import { errorHandler, notFound } from './middleware/errorHandler.js'
@@ -47,6 +48,7 @@ app.use('/api/users', userRoutes)
 app.use('/api/items', itemRoutes)
 app.use('/api/photos', photoRoutes)
 app.use('/api/messages', messagesRouter)
+app.use('/api/admin', adminRoutes)
 
 // 健康检查端点
 app.get('/health', async (req, res) => {
