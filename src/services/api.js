@@ -198,7 +198,11 @@ export const messageAPI = {
   getMessages: (page = 1, pageSize = 10) => {
     return request(`/api/messages?page=${page}&pageSize=${pageSize}`)
   },
-  // 发布留言
+  // 获取留言详情
+  getMessageDetail: (id) => {
+    return request(`/api/messages/${id}`)
+  },
+  // 发布留言/回复
   postMessage: (content, parent_id = null) => {
     return request('/api/messages', {
       method: 'POST',

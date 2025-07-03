@@ -62,7 +62,8 @@
 
           <div v-else class="messages-list">
             <transition-group name="message-fade" tag="div">
-              <q-card v-for="message in messages" :key="message.id" class="message-item" flat bordered>
+              <q-card v-for="message in messages" :key="message.id" class="message-item" flat bordered
+                @click="showReplies(message)" style="cursor:pointer;">
                 <q-card-section class="message-content">
                   <div class="message-header">
                     <div class="user-info">
@@ -82,12 +83,12 @@
 
                   <div class="message-actions">
                     <q-btn flat round color="teal" :icon="message.liked ? 'thumb_up' : 'thumb_up_off_alt'" size="sm"
-                      class="action-btn" @click="toggleLike(message)">
+                      class="action-btn" @click.stop="toggleLike(message)">
                       <q-tooltip>{{ message.liked ? '取消点赞' : '点赞' }}</q-tooltip>
                     </q-btn>
                     <span class="like-count">{{ message.like_count }}</span>
                     <q-btn flat round color="grey-6" icon="reply" size="sm" class="action-btn"
-                      @click="showReplies(message)">
+                      @click.stop="showReplies(message)">
                       <q-tooltip>回复</q-tooltip>
                     </q-btn>
                     <span class="reply-count">{{ message.reply_count }}</span>
@@ -99,6 +100,57 @@
         </q-card-section>
       </q-card>
     </div>
+
+    <!-- 留言详情弹窗 -->
+    <q-dialog v-model="showDetail" maximized>
+      <div class="detail-dialog-inner">
+        <q-card class="detail-card">
+          <q-card-section class="row items-center q-pb-none">
+            <div class="text-h6">留言详情</div>
+            <q-space />
+            <q-btn icon="close" flat round dense v-close-popup @click="showDetail = false" />
+          </q-card-section>
+          <q-card-section>
+            <div class="row items-center">
+              <q-avatar size="40px" class="user-avatar">
+                <img :src="detailMessage?.avatar_url || defaultAvatar" />
+              </q-avatar>
+              <div class="q-ml-md">
+                <div class="user-name">{{ detailMessage?.username }}</div>
+                <div class="message-time">{{ formatTime(detailMessage?.created_at) }}</div>
+              </div>
+            </div>
+            <div class="q-mt-md message-text">{{ detailMessage?.content }}</div>
+          </q-card-section>
+          <q-separator />
+          <q-card-section>
+            <div class="reply-title">全部回复</div>
+            <div v-if="replyList.length === 0" class="q-mt-sm text-grey">暂无回复</div>
+            <div v-else>
+              <div v-for="reply in replyList" :key="reply.id" class="reply-item q-mb-md">
+                <div class="row items-center">
+                  <q-avatar size="32px" class="user-avatar">
+                    <img :src="reply.avatar_url || defaultAvatar" />
+                  </q-avatar>
+                  <div class="q-ml-sm">
+                    <div class="user-name">{{ reply.username }}</div>
+                    <div class="message-time">{{ formatTime(reply.created_at) }}</div>
+                  </div>
+                </div>
+                <div class="q-mt-xs">{{ reply.content }}</div>
+              </div>
+            </div>
+          </q-card-section>
+          <q-separator />
+          <q-card-section>
+            <div class="reply-input-row">
+              <q-input v-model="replyContent" label="回复内容" outlined dense class="reply-input" />
+              <q-btn label="回复" color="teal" :loading="replyLoading" @click="submitReply" class="reply-btn" />
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -113,13 +165,18 @@ const form = ref({ content: '' })
 const loading = ref(false)
 const messages = ref([])
 
+// 留言详情相关
+const showDetail = ref(false)
+const detailMessage = ref(null)
+const replyList = ref([])
+const replyContent = ref('')
+const replyLoading = ref(false)
+
 // 获取留言列表
 const fetchMessages = async () => {
   try {
     const res = await messageAPI.getMessages()
-    console.log('留言接口返回：', res)
     const msgList = res.messages || res.data?.messages || []
-    console.log('msgList:', msgList)
     messages.value = Array.isArray(msgList) ? msgList.map(msg => ({ ...msg, liked: false })) : []
   } catch (e) {
     console.error(e)
@@ -161,10 +218,41 @@ const toggleLike = async (message) => {
   }
 }
 
-// 展示回复（可后续实现弹窗）
+// 展示留言详情和回复弹窗
 const showReplies = (message) => {
-  console.log(message)
-  $q.notify({ type: 'info', message: '后续可实现留言详情和回复功能' })
+  fetchDetail(message.id)
+}
+
+// 获取留言详情及回复
+const fetchDetail = async (messageId) => {
+  try {
+    const res = await messageAPI.getMessageDetail(messageId)
+    detailMessage.value = res
+    replyList.value = res.replies || []
+    showDetail.value = true
+  } catch (e) {
+    console.error(e)
+    $q.notify({ type: 'negative', message: '获取留言详情失败' })
+  }
+}
+
+// 发送回复
+const submitReply = async () => {
+  if (!replyContent.value.trim()) {
+    $q.notify({ type: 'warning', message: '回复内容不能为空' })
+    return
+  }
+  replyLoading.value = true
+  try {
+    await messageAPI.postMessage(replyContent.value, detailMessage.value.id)
+    $q.notify({ type: 'positive', message: '回复成功！' })
+    replyContent.value = ''
+    await fetchDetail(detailMessage.value.id)
+  } catch (e) {
+    console.error(e)
+    $q.notify({ type: 'negative', message: '回复失败' })
+  }
+  replyLoading.value = false
 }
 
 // 时间格式化
@@ -432,5 +520,53 @@ const formatTime = (timeStr) => {
   width: 100%;
   height: 100%;
   border-radius: 50%;
+}
+
+.detail-dialog-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 40px;
+  box-sizing: border-box;
+}
+
+.detail-card {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.reply-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.reply-item {
+  background: #f8f8f8;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.reply-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.reply-input {
+  flex: 1 1 auto;
+}
+
+.reply-btn {
+  flex-shrink: 0;
+  height: 40px;
+  margin-bottom: 2px;
 }
 </style>
