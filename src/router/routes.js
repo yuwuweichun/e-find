@@ -20,6 +20,11 @@ const routes = [
         meta: { requiresAuth: true },
       },
       {
+        path: 'announcement',
+        component: () => import('pages/AnnouncementPage.vue'),
+        meta: { requiresAuth: false },
+      },
+      {
         path: 'user',
         component: () => import('pages/UserPage.vue'),
         meta: { requiresAuth: true },

@@ -56,6 +56,14 @@
               留言板
             </q-item-section>
           </q-item>
+          <q-item clickable v-ripple to="/announcement">
+            <q-item-section avatar>
+              <q-icon name="announcement" />
+            </q-item-section>
+            <q-item-section>
+              公告栏
+            </q-item-section>
+          </q-item>
           <q-item clickable v-ripple to="/user">
             <q-item-section avatar>
               <q-icon name="account_circle" />
