@@ -72,6 +72,16 @@
               个人中心
             </q-item-section>
           </q-item>
+
+          <!-- 管理员入口 -->
+          <q-item v-if="isAdmin" clickable v-ripple to="/admin" class="admin-item">
+            <q-item-section avatar>
+              <q-icon name="admin_panel_settings" color="orange" />
+            </q-item-section>
+            <q-item-section>
+              <span class="text-weight-medium">后台管理</span>
+            </q-item-section>
+          </q-item>
         </q-list>
       </q-scroll-area>
     </q-drawer>
@@ -101,6 +111,7 @@ userStore.fetchProfile()
 
 const avatar = computed(() => userStore.avatar)
 const displayName = computed(() => userStore.displayName)
+const isAdmin = computed(() => userStore.isAdmin)
 
 function handleUserClick() {
   if (!userStore.isLoggedIn) {

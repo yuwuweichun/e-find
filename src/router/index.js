@@ -36,6 +36,7 @@ export default route(function (/* { store, ssrContext } */) {
   // 添加路由守卫
   Router.beforeEach((to, from, next) => {
     const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
+    const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin)
     const isAuthenticated = !!localStorage.getItem('token')
 
     if (requiresAuth && !isAuthenticated) {
@@ -44,6 +45,18 @@ export default route(function (/* { store, ssrContext } */) {
         path: '/auth/login',
         query: { redirect: to.fullPath },
       })
+    } else if (requiresAdmin && isAuthenticated) {
+      // 如果需要管理员权限，检查用户角色
+      const userStr = localStorage.getItem('user')
+      if (userStr) {
+        const user = JSON.parse(userStr)
+        const isAdmin = user.role === 'admin' || user.role === 'super admin'
+        if (!isAdmin) {
+          next('/')
+          return
+        }
+      }
+      next()
     } else {
       next()
     }

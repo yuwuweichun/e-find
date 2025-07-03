@@ -22,6 +22,7 @@ export const useUserStore = defineStore('user', {
     isLoggedIn: (state) => !!state.token,
     displayName: (state) => state.user.username || '请登录',
     avatar: (state) => state.user.avatar_url || avatarDefault,
+    isAdmin: (state) => state.user.role === 'admin' || state.user.role === 'super admin',
   },
   actions: {
     setUser(user) {
