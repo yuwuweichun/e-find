@@ -4,7 +4,7 @@
     <!-- 轮播图 -->
     <div class="q-pa-md flex flex-center">
       <q-carousel swipeable animated v-model="slide" thumbnails infinite
-        style="height: 400px; width: 100%; max-width: 900px;" autoplay interval="3000">
+        style="height: 500px; width: 100%; max-width: 1000px;" autoplay interval="3000">
         <q-carousel-slide :name="1" :img-src="carousel1" img-class="carousel-img-contain" />
         <q-carousel-slide :name="2" :img-src="carousel2" img-class="carousel-img-contain" />
         <!-- <q-carousel-slide :name="3" img-src="" /> -->
