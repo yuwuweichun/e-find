@@ -33,7 +33,7 @@
           </q-card-section>
           <!-- 丢失/招领日期 -->
           <q-card-section class="text-subtitle2">
-            日期：{{ formatDate(item.lost_date) }}
+            拾失日期：{{ formatDate(item.lost_date) }}
           </q-card-section>
           <!-- 联系方式 -->
           <q-card-section class="text-subtitle2">
