@@ -8,6 +8,15 @@
       <q-card-section style="padding: 0;">
         <q-table :rows="items" :columns="columns" row-key="id" flat dense :pagination="{ rowsPerPage: 8 }"
           :no-data-label="'暂无物品'" class="my-table">
+          <template v-slot:body-cell-status="props">
+            <q-td :props="props">
+              <div style="display: flex; align-items: center;">
+                <q-select v-model="props.row.status" :options="statusOptions" dense outlined
+                  style="width: 120px; margin-right: 8px;" emit-value map-options />
+                <q-btn size="sm" color="primary" flat label="保存" @click="() => updateStatus(props.row)" />
+              </div>
+            </q-td>
+          </template>
           <template v-slot:body-cell-created_at="props">
             <q-td :props="props">
               {{ formatDate(props.row.created_at || props.row.create_time || props.row.time) }}
@@ -29,7 +38,7 @@ import { itemAPI } from 'src/services/api'
 const props = defineProps({
   modelValue: Boolean
 })
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'update-status'])
 
 const dialogVisible = ref(props.modelValue)
 
@@ -49,6 +58,13 @@ const columns = [
   { name: 'created_at', label: '创建时间', field: row => row.created_at || row.create_time || row.time || '', align: 'left', sortable: true }
 ]
 
+const statusOptions = [
+  { label: '待审核', value: 'pending' },
+  { label: '已通过', value: 'approved' },
+  { label: '已拒绝', value: 'rejected' },
+  { label: '已结束', value: 'finished' }
+]
+
 function formatDate(val) {
   if (!val) return ''
   const d = new Date(val)
@@ -66,6 +82,24 @@ watch(dialogVisible, async (val) => {
     }
   }
 })
+
+async function updateStatus(row) {
+  try {
+    const statusValue = typeof row.status === 'object' ? row.status.value : row.status
+    const response = await itemAPI.updateItem(row.id, { status: statusValue })
+    if (response.success) {
+      emit('update-status', row.id, statusValue)
+      // 刷新数据
+      const res = await itemAPI.getItems()
+      items.value = res.items || []
+      console.log('✅ 物品状态更新成功:', row.id, statusValue)
+    } else {
+      console.error('❌ 物品状态更新失败:', response.message)
+    }
+  } catch (error) {
+    console.error('❌ 物品状态更新失败:', error)
+  }
+}
 </script>
 
 <style scoped>

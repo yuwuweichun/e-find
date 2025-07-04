@@ -237,6 +237,14 @@ export const adminAPI = {
       body: JSON.stringify({ role: newRole }),
     })
   },
+  // 更新物品状态
+  updateItemStatus: (itemId, newStatus) => {
+    console.log('✏️ 管理员更新物品状态，ID:', itemId, '状态:', newStatus)
+    return request(`/api/items/${itemId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status: newStatus }),
+    })
+  },
 }
 
 // 工具函数
@@ -311,4 +319,18 @@ export default {
   admin: adminAPI,
   utils: apiUtils,
   announcement: announcementAPI,
+}
+
+// 获取用户统计信息
+export function getUserStats() {
+  return request('/api/users/stats')
+}
+
+// 获取我的发布列表
+export function getMyItems(params = {}) {
+  const queryString = new URLSearchParams(params).toString()
+  const endpoint = queryString
+    ? `/api/items/user/my-items?${queryString}`
+    : '/api/items/user/my-items'
+  return request(endpoint)
 }

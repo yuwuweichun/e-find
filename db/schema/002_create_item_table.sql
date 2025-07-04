@@ -11,7 +11,7 @@ CREATE TABLE `item` (
   `location` VARCHAR(255) COMMENT 'Lost/found location',
   `lost_date` DATE COMMENT 'Lost/found date, precise to day',
   `contact_info` VARCHAR(100) COMMENT 'Contact information',
-  `status` ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending' COMMENT 'Review status: pending, approved, rejected',
+  `status` ENUM('pending','approved','rejected','finished') NOT NULL DEFAULT 'pending' COMMENT 'Review status: pending, approved, rejected, finished',
   `rejection_reason` TEXT COMMENT 'Rejection reason, only valid when status is rejected',
   `posted_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Publication date',
   PRIMARY KEY (`id`),

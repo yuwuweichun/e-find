@@ -252,4 +252,30 @@ router.post(
   },
 )
 
+// 获取用户统计信息（只统计发布和留言数量）
+router.get('/stats', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id
+    // 发布数量
+    const postsResult = await query('SELECT COUNT(*) as count FROM item WHERE publisher_id = ?', [
+      userId,
+    ])
+    // 留言数量
+    const messagesResult = await query('SELECT COUNT(*) as count FROM messages WHERE user_id = ?', [
+      userId,
+    ])
+
+    res.json({
+      success: true,
+      data: {
+        posts: postsResult[0].count,
+        messages: messagesResult[0].count,
+      },
+    })
+  } catch (error) {
+    console.error('获取用户统计信息失败:', error)
+    res.status(500).json({ success: false, message: '获取用户统计信息失败' })
+  }
+})
+
 export default router

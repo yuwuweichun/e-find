@@ -43,17 +43,7 @@
                     <q-item-section avatar>
                       <q-icon name="list" color="primary" />
                     </q-item-section>
-                    <q-item-section>查看所有物品</q-item-section>
-                    <q-item-section side>
-                      <q-icon name="chevron_right" color="grey-6" />
-                    </q-item-section>
-                  </q-item>
-                  <q-separator />
-                  <q-item clickable v-ripple @click="reviewItems">
-                    <q-item-section avatar>
-                      <q-icon name="rate_review" color="orange" />
-                    </q-item-section>
-                    <q-item-section>审核物品</q-item-section>
+                    <q-item-section>管理所有物品</q-item-section>
                     <q-item-section side>
                       <q-icon name="chevron_right" color="grey-6" />
                     </q-item-section>
@@ -207,8 +197,7 @@
         </div>
       </div>
     </div>
-    <ItemListDialog v-model="showItemList" />
-    <ItemReviewDialog v-model="showReviewDialog" />
+    <ItemListDialog v-model="showItemList" @update-status="handleUpdateItemStatus" />
     <UserListDialog v-model="showUserList" />
     <RoleManageDialog v-model="showRoleManage" />
     <AnnouncementManageDialog v-model="showAnnouncementManage" />
@@ -223,7 +212,6 @@ import { useQuasar } from 'quasar'
 import { useUserStore } from 'src/stores/user'
 import { adminAPI } from 'src/services/api'
 import ItemListDialog from 'src/components/ItemListDialog.vue'
-import ItemReviewDialog from 'src/components/ItemReviewDialog.vue'
 import UserListDialog from 'src/components/UserListDialog.vue'
 import RoleManageDialog from 'src/components/RoleManageDialog.vue'
 import AnnouncementManageDialog from 'src/components/AnnouncementManageDialog.vue'
@@ -264,7 +252,6 @@ const statsList = ref([
 ])
 
 const showItemList = ref(false)
-const showReviewDialog = ref(false)
 const showUserList = ref(false)
 const showRoleManage = ref(false)
 const showAnnouncementManage = ref(false)
@@ -273,10 +260,6 @@ const showAnnouncementPublish = ref(false)
 // 管理功能方法
 const viewAllItems = () => {
   showItemList.value = true
-}
-
-const reviewItems = () => {
-  showReviewDialog.value = true
 }
 
 const viewAllUsers = () => {
@@ -317,6 +300,26 @@ const exportData = () => {
 
 const activityLogs = () => {
   $q.notify({ type: 'info', message: '操作日志功能开发中...' })
+}
+
+// 新增：处理物品状态修改
+const handleUpdateItemStatus = async (itemId, newStatus) => {
+  try {
+    const response = await adminAPI.updateItemStatus(itemId, newStatus)
+    if (response.success) {
+      $q.notify({ type: 'positive', message: '物品状态已更新' })
+      // 刷新统计数据
+      const data = await adminAPI.getStats()
+      statsList.value[0].value = data.itemCount
+      statsList.value[1].value = data.userCount
+      statsList.value[2].value = data.solvedCount
+      statsList.value[3].value = data.pendingCount
+    } else {
+      $q.notify({ type: 'negative', message: response.message || '物品状态更新失败' })
+    }
+  } catch (e) {
+    $q.notify({ type: 'negative', message: '物品状态更新失败: ' + (e.message || e) })
+  }
 }
 </script>
 

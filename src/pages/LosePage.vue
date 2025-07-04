@@ -107,10 +107,10 @@
       </q-card>
 
       <!-- 快速操作按钮 -->
-      <div class="quick-actions">
+      <!-- <div class="quick-actions">
         <q-btn label="查看招领信息" color="primary" outline class="action-btn" icon="search" />
         <q-btn label="我的发布" color="orange" outline class="action-btn" icon="history" />
-      </div>
+      </div> -->
     </div>
   </q-page>
 </template>

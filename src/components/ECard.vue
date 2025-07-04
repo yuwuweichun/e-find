@@ -94,6 +94,7 @@ const statusText = computed(() => {
     case 'pending': return '待审核'
     case 'approved': return '已通过'
     case 'rejected': return '已拒绝'
+    case 'finished': return '已结束'
     default: return '未知'
   }
 })

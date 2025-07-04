@@ -21,12 +21,8 @@
               <span class="stat-label">发布</span>
             </div>
             <div class="stat-item">
-              <span class="stat-number">{{ userInfo.found }}</span>
-              <span class="stat-label">找回</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number">{{ userInfo.helped }}</span>
-              <span class="stat-label">帮助</span>
+              <span class="stat-number">{{ userInfo.messages }}</span>
+              <span class="stat-label">留言</span>
             </div>
           </div>
         </div>
@@ -99,9 +95,11 @@
                     </div>
                   </div>
                   <div class="post-status">
-                    <q-chip :color="post.status === 'active' ? 'positive' : 'grey'" text-color="white" size="sm">
-                      {{ post.status === 'active' ? '进行中' : '已结束' }}
+                    <q-chip :color="getStatusColor(post.status)" text-color="white" size="sm">
+                      {{ getStatusLabel(post.status) }}
                     </q-chip>
+                    <q-btn v-if="post.status === 'approved'" size="sm" color="info" flat label="标记为已结束"
+                      @click="markAsFinished(post)" class="q-ml-sm" />
                   </div>
                 </div>
               </div>
@@ -120,9 +118,11 @@
                     </div>
                   </div>
                   <div class="post-status">
-                    <q-chip color="positive" text-color="white" size="sm">
-                      进行中
+                    <q-chip :color="getStatusColor(post.status)" text-color="white" size="sm">
+                      {{ getStatusLabel(post.status) }}
                     </q-chip>
+                    <q-btn v-if="post.status === 'approved'" size="sm" color="info" flat label="标记为已结束"
+                      @click="markAsFinished(post)" class="q-ml-sm" />
                   </div>
                 </div>
               </div>
@@ -141,9 +141,11 @@
                     </div>
                   </div>
                   <div class="post-status">
-                    <q-chip color="positive" text-color="white" size="sm">
-                      进行中
+                    <q-chip :color="getStatusColor(post.status)" text-color="white" size="sm">
+                      {{ getStatusLabel(post.status) }}
                     </q-chip>
+                    <q-btn v-if="post.status === 'approved'" size="sm" color="info" flat label="标记为已结束"
+                      @click="markAsFinished(post)" class="q-ml-sm" />
                   </div>
                 </div>
               </div>
@@ -266,10 +268,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from 'src/stores/user'
 import { useQuasar } from 'quasar'
+import { getUserStats, getMyItems } from 'src/services/api'
 
 const router = useRouter()
 const $q = useQuasar()
@@ -286,48 +289,50 @@ const activeTab = ref('all')
 const showSearch = ref(false)
 const searchQuery = ref('')
 
-// 用户信息
+// 用户信息统计
 const userInfo = ref({
-  name: 'username',
-  email: 'username@example.com',
-  posts: 12,
-  found: 8,
-  helped: 15
+  posts: 0,
+  found: 0,
+  lose: 0,
+  helped: 0,
+  messages: 0
 })
 
 // 我的发布数据
-const myPosts = ref([
-  {
-    id: 1,
-    title: '在图书馆捡到一部手机',
-    type: 'find',
-    status: 'active',
-    time: '2024-01-15 14:30'
-  },
-  {
-    id: 2,
-    title: '丢失了钱包，内有重要证件',
-    type: 'lose',
-    status: 'active',
-    time: '2024-01-14 16:20'
-  },
-  {
-    id: 3,
-    title: '在食堂捡到一串钥匙',
-    type: 'find',
-    status: 'active',
-    time: '2024-01-13 09:15'
-  }
-])
+const myPosts = ref([])
 
 // 计算属性
 const findPosts = computed(() =>
-  myPosts.value.filter(post => post.type === 'find')
+  myPosts.value.filter(post => post.type === 'found')
 )
 
 const losePosts = computed(() =>
-  myPosts.value.filter(post => post.type === 'lose')
+  myPosts.value.filter(post => post.type === 'lost')
 )
+
+// 获取用户统计信息和我的发布
+async function fetchUserData() {
+  try {
+    const statsRes = await getUserStats()
+    if (statsRes.success) {
+      userInfo.value = statsRes.data
+    }
+    const postsRes = await getMyItems({ limit: 100 })
+    if (postsRes.success) {
+      myPosts.value = (postsRes.data.items || []).map(item => ({
+        id: item.id,
+        title: item.title,
+        type: item.type,
+        status: item.status,
+        time: item.posted_date
+      }))
+    }
+  } catch (e) {
+    $q.notify({ type: 'negative', message: e.message || '获取数据失败' })
+  }
+}
+
+onMounted(fetchUserData)
 
 // 方法
 const editAvatar = () => {
@@ -396,6 +401,37 @@ const formatTime = (timeStr) => {
   if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`
   return date.toLocaleDateString('zh-CN')
+}
+
+// 状态显示辅助函数
+function getStatusLabel(status) {
+  switch (status) {
+    case 'pending': return '未审核'
+    case 'approved': return '进行中'
+    case 'rejected': return '已驳回'
+    case 'finished': return '已结束'
+    default: return status
+  }
+}
+function getStatusColor(status) {
+  switch (status) {
+    case 'pending': return 'grey'
+    case 'approved': return 'positive'
+    case 'rejected': return 'negative'
+    case 'finished': return 'info'
+    default: return 'grey'
+  }
+}
+
+// 新增方法
+async function markAsFinished(post) {
+  try {
+    await getMyItems.updateItem(post.id, { status: 'finished' })
+    post.status = 'finished'
+    $q.notify({ type: 'positive', message: '已标记为已结束' })
+  } catch {
+    $q.notify({ type: 'negative', message: '操作失败' })
+  }
 }
 </script>
 

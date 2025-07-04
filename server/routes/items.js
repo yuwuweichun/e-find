@@ -232,6 +232,10 @@ router.put(
       .isLength({ max: 100 })
       .withMessage('联系方式长度不能超过100个字符'),
     body('lost_date').optional().isISO8601().withMessage('日期格式不正确'),
+    body('status')
+      .optional()
+      .isIn(['pending', 'approved', 'rejected', 'finished'])
+      .withMessage('状态值无效'),
   ],
   async (req, res) => {
     try {
@@ -372,10 +376,9 @@ router.get('/user/my-items', authenticateToken, async (req, res) => {
   try {
     console.log('👤 获取用户物品列表，用户ID:', req.user.id)
 
-    const { page = 1, limit = 10 } = req.query
-    const pageNum = parseInt(page, 10) || 1
-    const limitNum = parseInt(limit, 10) || 10
-    const offset = (pageNum - 1) * limitNum
+    const pageNum = Number(req.query.page) || 1
+    const limitNum = Number(req.query.limit) || 10
+    const offsetNum = (pageNum - 1) * limitNum
 
     // 查询总数
     const countResult = await query('SELECT COUNT(*) as total FROM item WHERE publisher_id = ?', [
@@ -383,11 +386,9 @@ router.get('/user/my-items', authenticateToken, async (req, res) => {
     ])
     const total = countResult[0].total
 
-    // 查询物品列表
-    const items = await query(
-      `SELECT * FROM item WHERE publisher_id = ? ORDER BY posted_date DESC LIMIT ? OFFSET ?`,
-      [req.user.id, limitNum, offset],
-    )
+    // 查询物品列表（将 LIMIT 和 OFFSET 直接拼接到 SQL 字符串中，防止参数类型问题）
+    const sql = `SELECT * FROM item WHERE publisher_id = ? ORDER BY posted_date DESC LIMIT ${limitNum} OFFSET ${offsetNum}`
+    const items = await query(sql, [req.user.id])
 
     // 为每个物品获取图片
     for (let item of items) {

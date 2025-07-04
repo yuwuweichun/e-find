@@ -15,7 +15,8 @@
     <!-- 搜索和日期筛选区 -->
     <div class="row justify-center q-gutter-md">
       <!-- 搜索框 -->
-      <q-input rounded outlined v-model="search" type="search" hint="Search" label="输入失物名称搜索" color="info" class="col-5">
+      <q-input rounded outlined v-model="search" type="search" hint="Search" label="输入失物名称搜索" color="info"
+        class="col-5">
         <template v-slot:append>
           <q-icon name="search" />
         </template>
@@ -75,6 +76,8 @@ const selectedDate = ref('') // 日期字符串，格式如 '2024-07-01'
 const filteredItems = computed(() => {
   const keyword = search.value.trim().toLowerCase()
   return items.value.filter(item => {
+    // 只显示状态为approved或finished的失物
+    if (item.status !== 'approved' && item.status !== 'finished') return false
     // 关键词匹配（title/location）
     const matchKeyword =
       !keyword ||
