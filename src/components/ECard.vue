@@ -55,7 +55,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import defaultImg from '@/assets/images/default.png'
+import defaultImg from '@/assets/images/default_item_photo.png'
 
 const props = defineProps({
   item: {
