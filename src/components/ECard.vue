@@ -1,13 +1,13 @@
 <template>
   <div class="row justify-center q-gutter-md">
-    <q-card class="my-card q-mb-xl" bordered >
+    <q-card class="my-card q-mb-xl" bordered>
       <!-- 物品图片，如果有图片则显示，否则显示默认图片 -->
       <q-img :src="getImgUrl(item) || defaultImg" :ratio="16 / 9" style="min-height: 120px;"
         @error="() => { console.log('图片加载失败', getImgUrl(item)) }" />
 
       <q-card-section>
         <!-- 发布时间 -->
-        <div class="text-overline text-orange-9">{{ item.posted_date || '未知时间' }}</div>
+        <div class="text-overline text-orange-9">{{ formatDateTime(item.posted_date) }}</div>
         <!-- 物品标题 -->
         <div class="text-h5 q-mt-sm q-mb-xs">{{ item.title }}</div>
         <!-- 物品类型 -->
@@ -33,7 +33,7 @@
           </q-card-section>
           <!-- 丢失/招领日期 -->
           <q-card-section class="text-subtitle2">
-            日期：{{ item.lost_date || '未知' }}
+            日期：{{ formatDate(item.lost_date) }}
           </q-card-section>
           <!-- 联系方式 -->
           <q-card-section class="text-subtitle2">
@@ -63,6 +63,28 @@ const props = defineProps({
     required: true
   }
 })
+
+// 日期时间格式化函数
+function formatDateTime(dateStr) {
+  if (!dateStr) return '未知时间'
+  const date = new Date(dateStr)
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  const h = String(date.getHours()).padStart(2, '0')
+  const min = String(date.getMinutes()).padStart(2, '0')
+  const s = String(date.getSeconds()).padStart(2, '0')
+  return `${y}-${m}-${d} ${h}:${min}:${s}`
+}
+// 只显示年月日
+function formatDate(dateStr) {
+  if (!dateStr) return '未知'
+  const date = new Date(dateStr)
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
 
 console.log('ECard item:', props.item)
 const expanded = ref(false)
