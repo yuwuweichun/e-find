@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">易寻</string>
-    <string name="title_activity_main">易寻</string>
-    <string name="package_name">com.c4llm364n.quasar.app</string>
-    <string name="custom_url_scheme">com.c4llm364n.quasar.app</string>
-</resources>
