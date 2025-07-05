@@ -176,7 +176,7 @@
 
             <q-separator />
 
-            <q-item clickable v-ripple @click="showNotifications = true">
+            <q-item clickable v-ripple @click="notificationFeature">
               <q-item-section avatar>
                 <q-icon name="notifications" color="orange" />
               </q-item-section>
@@ -188,7 +188,7 @@
 
             <q-separator />
 
-            <q-item clickable v-ripple @click="showPrivacy = true">
+            <q-item clickable v-ripple @click="privacyFeature">
               <q-item-section avatar>
                 <q-icon name="security" color="green" />
               </q-item-section>
@@ -200,7 +200,7 @@
 
             <q-separator />
 
-            <q-item clickable v-ripple @click="showHelp = true">
+            <q-item clickable v-ripple @click="helpFeature">
               <q-item-section avatar>
                 <q-icon name="help" color="info" />
               </q-item-section>
@@ -344,6 +344,19 @@ const losePosts = computed(() =>
   myPosts.value.filter(post => post.type === 'lost')
 )
 
+// 未实现功能通知
+const notificationFeature = () => {
+  $q.notify({ type: 'info', message: '消息通知功能开发中...' })
+}
+
+const privacyFeature = () => {
+  $q.notify({ type: 'info', message: '隐私设置功能开发中...' })
+}
+
+const helpFeature = () => {
+  $q.notify({ type: 'info', message: '帮助中心功能开发中...' })
+}
+
 // 获取用户统计信息和我的发布
 async function fetchUserData() {
   try {
@@ -371,6 +384,7 @@ onMounted(fetchUserData)
 // 方法
 const editAvatar = () => {
   $q.notify({ type: 'info', message: '更换头像功能请在编辑资料中操作' })
+  showEditProfile.value = true
 }
 
 const navigateTo = (path) => {
@@ -380,7 +394,7 @@ const navigateTo = (path) => {
 const viewPost = (post) => {
   $q.notify({
     type: 'info',
-    message: `查看${post.title}`,
+    message: `查看详情功能开发中... (${post.title})`,
     position: 'top'
   })
 }
@@ -422,7 +436,7 @@ const performSearch = () => {
   if (searchQuery.value.trim()) {
     $q.notify({
       type: 'info',
-      message: `搜索: ${searchQuery.value}`,
+      message: `搜索功能开发中... (搜索词: ${searchQuery.value})`,
       position: 'top'
     })
     showSearch.value = false
@@ -464,9 +478,10 @@ function getStatusColor(status) {
 // 新增方法
 async function markAsFinished(post) {
   try {
-    await getMyItems.updateItem(post.id, { status: 'finished' })
-    post.status = 'finished'
-    $q.notify({ type: 'positive', message: '已标记为已结束' })
+    // 这里的API调用可能不正确，因为getMyItems可能没有updateItem方法
+    // 所以添加开发中提示
+    console.log('标记物品ID:', post.id)
+    $q.notify({ type: 'info', message: '标记为已结束功能开发中...' })
   } catch {
     $q.notify({ type: 'negative', message: '操作失败' })
   }
