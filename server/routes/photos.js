@@ -6,8 +6,8 @@ import { query } from '../config/database.js'
 
 const router = express.Router()
 
-// 确保上传目录存在
-const uploadDir = 'uploads'
+// 修改上传目录
+const uploadDir = 'uploads/items'
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true })
 }
@@ -56,7 +56,7 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     }
 
     // 构建图片URL
-    const imageUrl = `/uploads/${req.file.filename}`
+    const imageUrl = `/uploads/items/${req.file.filename}`
 
     console.log('✅ 图片上传成功:', imageUrl)
 
@@ -99,7 +99,7 @@ router.delete('/:filename', async (req, res) => {
     fs.unlinkSync(filePath)
 
     // 从数据库中删除相关记录
-    const imageUrl = `/uploads/${filename}`
+    const imageUrl = `/uploads/items/${filename}`
     await query('DELETE FROM photo WHERE url = ?', [imageUrl])
 
     console.log('✅ 图片删除成功:', filename)
