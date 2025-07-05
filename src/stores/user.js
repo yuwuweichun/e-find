@@ -59,6 +59,15 @@ export const useUserStore = defineStore('user', {
       await this.fetchProfile()
       return res
     },
+    async uploadAvatar(file) {
+      const res = await userAPI.uploadAvatar(file)
+      if (res && res.data && res.data.url) {
+        // 更新头像URL
+        this.user.avatar_url = res.data.url
+        localStorage.setItem('user', JSON.stringify(this.user))
+      }
+      return res
+    },
     logout() {
       this.clear()
       window.location.href = '/auth/login'

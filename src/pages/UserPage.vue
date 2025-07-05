@@ -251,12 +251,45 @@
 
     <!-- 编辑资料弹窗 -->
     <q-dialog v-model="showEditProfile">
-      <q-card style="min-width:320px;max-width:90vw;">
+      <q-card style="min-width:350px;max-width:90vw;">
         <q-card-section class="text-h6">编辑资料</q-card-section>
-        <q-card-section>
-          <q-input v-model="editForm.full_name" label="真实姓名" />
-          <q-input v-model="editForm.phone" label="手机号" />
-          <q-input v-model="editForm.avatar_url" label="头像URL" />
+        <q-card-section class="q-pa-md">
+          <!-- 头像上传区域 -->
+          <div class="avatar-upload-section">
+            <div class="avatar-preview">
+              <q-avatar size="100px">
+                <img :src="avatarPreview || editForm.avatar_url || avatar" alt="头像预览"
+                  style="object-fit: cover; width: 100%; height: 100%;" />
+              </q-avatar>
+            </div>
+            <div class="upload-controls">
+              <q-file v-model="avatarFile" label="选择头像图片" outlined accept="image/*"
+                @update:model-value="handleFileSelected" style="max-width: 220px">
+                <template v-slot:prepend>
+                  <q-icon name="add_photo_alternate" color="primary" />
+                </template>
+                <template v-slot:hint>
+                  支持jpg, png格式，不超过2MB
+                </template>
+              </q-file>
+              <q-btn :disable="!avatarFile" label="上传头像" color="primary" dense class="q-mt-sm"
+                :loading="avatarUploading" @click="uploadAvatar" />
+            </div>
+          </div>
+
+          <!-- 用户基本信息 -->
+          <div class="user-fields q-mt-md">
+            <!-- 不可修改字段 -->
+            <q-input v-model="editForm.id" label="用户ID" disable readonly />
+            <q-input v-model="editForm.username" label="用户名" disable readonly />
+            <q-input v-model="editForm.role" label="角色" disable readonly />
+
+            <!-- 可修改字段 -->
+            <q-input v-model="editForm.full_name" label="真实姓名" />
+            <q-input v-model="editForm.phone" label="手机号"
+              :rules="[val => !val || /^1[3-9]\d{9}$/.test(val) || '请输入有效的手机号码']" />
+            <q-input v-model="editForm.student_no" label="学号" />
+          </div>
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat label="取消" color="primary" v-close-popup :disable="editLoading" />
@@ -288,6 +321,7 @@ const displayName = computed(() => userStore.displayName)
 const activeTab = ref('all')
 const showSearch = ref(false)
 const searchQuery = ref('')
+const avatarPreview = ref(null)
 
 // 用户信息统计
 const userInfo = ref({
@@ -354,6 +388,8 @@ const viewPost = (post) => {
 const showEditProfile = ref(false)
 const editForm = ref({ ...user.value })
 const editLoading = ref(false)
+const avatarFile = ref(null)
+const avatarUploading = ref(false)
 
 async function saveProfile() {
   editLoading.value = true
@@ -361,7 +397,7 @@ async function saveProfile() {
     await userStore.updateProfile({
       full_name: editForm.value.full_name,
       phone: editForm.value.phone,
-      avatar_url: editForm.value.avatar_url,
+      student_no: editForm.value.student_no,
     })
     $q.notify({ type: 'positive', message: '资料更新成功' })
     showEditProfile.value = false
@@ -374,6 +410,8 @@ async function saveProfile() {
 const editProfile = () => {
   showEditProfile.value = true
   editForm.value = { ...user.value }
+  avatarPreview.value = null
+  avatarFile.value = null
 }
 
 const logout = () => {
@@ -432,6 +470,55 @@ async function markAsFinished(post) {
   } catch {
     $q.notify({ type: 'negative', message: '操作失败' })
   }
+}
+
+const handleFileSelected = () => {
+  // 验证文件大小
+  if (avatarFile.value && avatarFile.value.size > 2 * 1024 * 1024) {
+    $q.notify({
+      type: 'negative',
+      message: '头像图片不能超过2MB'
+    })
+    avatarFile.value = null
+    avatarPreview.value = null
+    return
+  }
+
+  // 创建本地预览
+  if (avatarFile.value) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      avatarPreview.value = e.target.result
+    }
+    reader.readAsDataURL(avatarFile.value)
+  } else {
+    avatarPreview.value = null
+  }
+}
+
+const uploadAvatar = async () => {
+  if (!avatarFile.value) return
+
+  avatarUploading.value = true
+  try {
+    const result = await userStore.uploadAvatar(avatarFile.value)
+    if (result && result.success) {
+      $q.notify({
+        type: 'positive',
+        message: '头像上传成功'
+      })
+      // 更新表单中的头像预览
+      editForm.value.avatar_url = result.data.url
+      avatarFile.value = null
+      avatarPreview.value = null
+    }
+  } catch (e) {
+    $q.notify({
+      type: 'negative',
+      message: e.message || '头像上传失败'
+    })
+  }
+  avatarUploading.value = false
 }
 </script>
 
@@ -662,6 +749,32 @@ async function markAsFinished(post) {
   margin-top: 1rem;
 }
 
+/* 头像上传区域样式 */
+.avatar-upload-section {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.5rem 0;
+}
+
+.avatar-preview {
+  flex-shrink: 0;
+}
+
+.upload-controls {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 用户字段样式 */
+.user-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 /* 移动端优化 */
 @media (max-width: 600px) {
   .user-header {
@@ -688,6 +801,11 @@ async function markAsFinished(post) {
 
   .action-item {
     padding: 1rem;
+  }
+
+  .avatar-upload-section {
+    flex-direction: column;
+    align-items: center;
   }
 }
 </style>

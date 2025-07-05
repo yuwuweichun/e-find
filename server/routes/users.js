@@ -2,8 +2,48 @@ import express from 'express'
 import { body, validationResult } from 'express-validator'
 import { query } from '../config/database.js'
 import jwt from 'jsonwebtoken'
+import multer from 'multer'
+import path from 'path'
+import fs from 'fs'
 
 const router = express.Router()
+
+// 创建头像上传目录
+const avatarUploadDir = 'uploads/avatars'
+if (!fs.existsSync(avatarUploadDir)) {
+  fs.mkdirSync(avatarUploadDir, { recursive: true })
+}
+
+// 配置multer存储
+const avatarStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, avatarUploadDir)
+  },
+  filename: (req, file, cb) => {
+    // 生成唯一文件名
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9)
+    cb(null, 'avatar-' + uniqueSuffix + path.extname(file.originalname))
+  },
+})
+
+// 文件过滤器
+const fileFilter = (req, file, cb) => {
+  // 只允许图片文件
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true)
+  } else {
+    cb(new Error('只允许上传图片文件'), false)
+  }
+}
+
+// 配置multer
+const uploadAvatar = multer({
+  storage: avatarStorage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 2 * 1024 * 1024, // 限制2MB
+  },
+})
 
 // 验证JWT token的中间件
 const authenticateToken = (req, res, next) => {
@@ -132,6 +172,43 @@ router.put(
     }
   },
 )
+
+// 上传用户头像
+router.post('/avatar', authenticateToken, uploadAvatar.single('avatar'), async (req, res) => {
+  try {
+    console.log('📸 头像上传请求，用户ID:', req.user.id)
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: '请选择要上传的头像',
+      })
+    }
+
+    // 构建头像URL
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`
+
+    // 更新用户头像
+    await query('UPDATE user SET avatar_url = ? WHERE id = ?', [avatarUrl, req.user.id])
+
+    console.log('✅ 头像上传成功:', avatarUrl)
+
+    res.json({
+      success: true,
+      message: '头像上传成功',
+      data: {
+        url: avatarUrl,
+        filename: req.file.filename,
+      },
+    })
+  } catch (error) {
+    console.error('❌ 头像上传失败:', error)
+    res.status(500).json({
+      success: false,
+      message: '头像上传失败，请稍后重试',
+    })
+  }
+})
 
 // 修改密码
 router.put(

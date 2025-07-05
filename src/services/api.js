@@ -86,6 +86,22 @@ export const userAPI = {
     })
   },
 
+  // 上传用户头像
+  uploadAvatar: (file) => {
+    console.log('📸 上传用户头像:', file.name)
+
+    const formData = new FormData()
+    formData.append('avatar', file)
+
+    return request('/api/users/avatar', {
+      method: 'POST',
+      headers: {
+        // 不设置Content-Type，让浏览器自动设置multipart/form-data
+      },
+      body: formData,
+    })
+  },
+
   // 修改密码
   changePassword: (passwordData) => {
     console.log('🔐 修改密码')
