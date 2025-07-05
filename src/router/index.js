@@ -39,8 +39,16 @@ export default route(function (/* { store, ssrContext } */) {
     const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin)
     const isAuthenticated = !!localStorage.getItem('token')
 
+    console.log('🚦 路由守卫:', {
+      route: to.fullPath,
+      requiresAuth,
+      requiresAdmin,
+      isAuthenticated,
+    })
+
     if (requiresAuth && !isAuthenticated) {
       // 如果需要登录但未登录，重定向到登录页面
+      console.log('⚠️ 需要登录权限，重定向至登录页面')
       next({
         path: '/auth/login',
         query: { redirect: to.fullPath },
@@ -49,12 +57,25 @@ export default route(function (/* { store, ssrContext } */) {
       // 如果需要管理员权限，检查用户角色
       const userStr = localStorage.getItem('user')
       if (userStr) {
-        const user = JSON.parse(userStr)
-        const isAdmin = user.role === 'admin' || user.role === 'super admin'
-        if (!isAdmin) {
+        try {
+          const user = JSON.parse(userStr)
+          // 更新为中文角色名
+          const isAdmin = user.role === '普通管理员' || user.role === '超级管理员'
+          if (!isAdmin) {
+            console.log('⚠️ 需要管理员权限，但当前用户不是管理员')
+            next('/')
+            return
+          }
+          console.log('✅ 管理员权限验证通过')
+        } catch (error) {
+          console.error('❌ 解析用户数据失败:', error)
           next('/')
           return
         }
+      } else {
+        console.log('⚠️ 需要管理员权限，但未找到用户数据')
+        next('/')
+        return
       }
       next()
     } else {

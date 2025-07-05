@@ -29,6 +29,31 @@
                 </template>
               </q-input>
             </div>
+            <div class="form-group">
+              <q-input v-model="form.phone" label="电话" outlined
+                :rules="[val => !!val || '请输入电话', val => /^1[3-9]\d{9}$/.test(val) || '请输入正确的手机号']" class="custom-input"
+                bg-color="grey-1">
+                <template v-slot:prepend>
+                  <q-icon name="phone" color="primary" />
+                </template>
+              </q-input>
+            </div>
+            <div class="form-group">
+              <q-input v-model="form.studentNo" label="学号" outlined :rules="[val => !!val || '请输入学号']"
+                class="custom-input" bg-color="grey-1">
+                <template v-slot:prepend>
+                  <q-icon name="badge" color="primary" />
+                </template>
+              </q-input>
+            </div>
+            <div class="form-group">
+              <q-input v-model="form.fullName" label="真实姓名" outlined :rules="[val => !!val || '请输入真实姓名']"
+                class="custom-input" bg-color="grey-1">
+                <template v-slot:prepend>
+                  <q-icon name="face" color="primary" />
+                </template>
+              </q-input>
+            </div>
             <div class="submit-section">
               <q-btn label="注册" type="submit" color="primary" size="lg" class="submit-btn" :loading="loading"
                 unelevated>
@@ -65,12 +90,15 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { userAPI } from 'src/services/api'
+import { authAPI } from 'src/services/api'
 
 const router = useRouter()
 const form = ref({
   username: '',
   password: '',
+  phone: '',
+  studentNo: '',
+  fullName: '',
 })
 const loading = ref(false)
 const dialog = ref({ show: false, message: '', success: false })
@@ -78,10 +106,18 @@ const dialog = ref({ show: false, message: '', success: false })
 const onRegister = async () => {
   loading.value = true
   try {
-    await userAPI.register(form.value)
-    dialog.value = { show: true, message: '注册成功！请登录', success: true }
+    console.log('📝 提交注册表单:', form.value)
+    const response = await authAPI.register(form.value)
+
+    if (response.success) {
+      console.log('✅ 注册成功:', response)
+      dialog.value = { show: true, message: '注册成功！请登录', success: true }
+    } else {
+      throw new Error(response.message || '注册失败，请稍后重试')
+    }
   } catch (err) {
-    let msg = err?.response?.data?.message || err?.message || '注册失败'
+    console.error('❌ 注册失败:', err)
+    let msg = err.message || '注册失败，请稍后重试'
     dialog.value = { show: true, message: msg, success: false }
   } finally {
     loading.value = false

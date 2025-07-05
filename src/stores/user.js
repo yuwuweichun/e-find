@@ -5,11 +5,12 @@ import avatarDefault from 'src/assets/icons/user_avatar.png'
 const defaultUser = {
   id: null,
   username: '',
-  avatar_url: '',
+  avatarUrl: '',
   role: '',
   phone: '',
-  student_no: '',
-  full_name: '',
+  studentNo: '',
+  fullName: '',
+  status: '',
 }
 
 export const useUserStore = defineStore('user', {
@@ -21,13 +22,36 @@ export const useUserStore = defineStore('user', {
   getters: {
     isLoggedIn: (state) => !!state.token,
     displayName: (state) => state.user.username || '请登录',
-    avatar: (state) => state.user.avatar_url || avatarDefault,
-    isAdmin: (state) => state.user.role === 'admin' || state.user.role === 'super admin',
+    avatar: (state) => {
+      if (state.user.avatarUrl) {
+        if (state.user.avatarUrl.startsWith('http')) {
+          return state.user.avatarUrl
+        } else {
+          return `http://192.168.188.46:8080${state.user.avatarUrl}`
+        }
+      }
+      return avatarDefault
+    },
+    isAdmin: (state) => state.user.role === '普通管理员' || state.user.role === '超级管理员',
+    isSuperAdmin: (state) => state.user.role === '超级管理员',
   },
   actions: {
     setUser(user) {
-      this.user = { ...defaultUser, ...user }
+      const adaptedUser = {
+        ...defaultUser,
+        id: user.id,
+        username: user.username,
+        avatarUrl: user.avatarUrl,
+        role: user.role,
+        phone: user.phone,
+        studentNo: user.studentNo,
+        fullName: user.fullName,
+        status: user.status,
+      }
+
+      this.user = adaptedUser
       localStorage.setItem('user', JSON.stringify(this.user))
+      localStorage.setItem('userId', this.user.id)
     },
     setToken(token) {
       this.token = token
@@ -38,26 +62,46 @@ export const useUserStore = defineStore('user', {
       this.token = ''
       localStorage.removeItem('user')
       localStorage.removeItem('token')
+      localStorage.removeItem('userId')
     },
     loadFromStorage() {
       const userStr = localStorage.getItem('user')
       if (userStr) {
-        this.user = { ...defaultUser, ...JSON.parse(userStr) }
+        try {
+          this.user = { ...defaultUser, ...JSON.parse(userStr) }
+        } catch (e) {
+          console.error('加载用户数据失败:', e)
+          this.clear()
+        }
       }
       this.token = localStorage.getItem('token') || ''
     },
     async fetchProfile() {
       if (!this.token) return
-      const res = await userAPI.getProfile()
-      if (res && res.data) {
-        this.setUser(res.data)
+      try {
+        const userId = localStorage.getItem('userId')
+        const res = await userAPI.getProfile(userId)
+        if (res && res.data) {
+          this.setUser(res.data)
+          console.log('✅ 用户信息加载成功:', this.user.username)
+        }
+        this.loaded = true
+      } catch (error) {
+        console.error('❌ 获取用户信息失败:', error)
+        if (error.message.includes('401')) {
+          this.clear()
+        }
       }
-      this.loaded = true
     },
     async updateProfile(profile) {
-      const res = await userAPI.updateProfile(profile)
-      await this.fetchProfile()
-      return res
+      try {
+        const res = await userAPI.updateProfile(this.user.id, profile)
+        await this.fetchProfile()
+        return res
+      } catch (error) {
+        console.error('❌ 更新用户信息失败:', error)
+        throw error
+      }
     },
     logout() {
       this.clear()

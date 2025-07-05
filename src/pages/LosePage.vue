@@ -119,6 +119,7 @@
 import { ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { itemAPI } from 'src/services/api.js'
+import { photoAPI } from 'src/services/api.js'
 
 const $q = useQuasar()
 const URL = window.URL
@@ -148,38 +149,44 @@ const onRejected = () => {
 
 const onSubmit = async () => {
   loading.value = true
+  console.log('提交失物表单:', form.value)
 
   try {
-    // 先上传图片
-    const photoUrls = []
-    if (form.value.photos && form.value.photos.length) {
-      for (const photo of form.value.photos) {
-        const formData = new FormData()
-        formData.append('image', photo)
-        const response = await fetch('/api/photos/upload', {
-          method: 'POST',
-          body: formData
-        })
-        const result = await response.json()
-        if (result.success) {
-          photoUrls.push(result.data.url)
-        }
-      }
-    }
-
-    // 构造请求体
+    // 构造基本请求体
     const payload = {
       title: form.value.title,
       description: form.value.description,
       location: form.value.location,
-      contact_info: form.value.contact,
-      lost_date: form.value.date,
+      contactInfo: form.value.contact,
+      lostDate: form.value.date,
       type: 'lost',
-      photos: photoUrls
+      publisherId: parseInt(localStorage.getItem('userId')) || 0
     }
+    console.log('准备创建物品:', payload)
 
     // 创建失物信息
-    await itemAPI.createItem(payload)
+    const createResult = await itemAPI.createItem(payload)
+    console.log('创建物品响应:', createResult)
+
+    if (!createResult.success) {
+      throw new Error(createResult.message || '创建物品失败')
+    }
+
+    // 如果有上传图片，先创建物品记录，然后上传图片
+    const itemId = createResult.data?.id
+    if (itemId && form.value.photos && form.value.photos.length) {
+      console.log('开始上传物品图片')
+      for (const photo of form.value.photos) {
+        try {
+          // 使用新的photoAPI.uploadItemPhoto方法上传
+          await photoAPI.uploadItemPhoto(itemId, photo)
+          console.log('图片上传成功')
+        } catch (photoError) {
+          console.error('图片上传失败:', photoError)
+          // 继续上传其他图片，不中断
+        }
+      }
+    }
 
     $q.notify({
       type: 'positive',
@@ -198,6 +205,7 @@ const onSubmit = async () => {
       photos: []
     }
   } catch (error) {
+    console.error('发布失物信息失败:', error)
     $q.notify({
       type: 'negative',
       message: error.message || '发布失败，请稍后重试',

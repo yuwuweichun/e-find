@@ -73,11 +73,10 @@ const onSubmit = async () => {
   try {
     const response = await authAPI.login(form.value)
     if (response.success) {
+      console.log('🔑 登录成功:', response.data)
       // 保存到 pinia
       userStore.setToken(response.data.token)
       userStore.setUser(response.data.user)
-      // 关键：保存到 localStorage，api.js 才能自动带 token
-      localStorage.setItem('token', response.data.token)
 
       $q.notify({
         type: 'positive',
@@ -89,6 +88,7 @@ const onSubmit = async () => {
       router.push('/user')
     }
   } catch (error) {
+    console.error('❌ 登录失败:', error)
     $q.notify({
       type: 'negative',
       message: error.message || '登录失败，请稍后重试',

@@ -210,7 +210,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useUserStore } from 'src/stores/user'
-import { adminAPI } from 'src/services/api'
+import { itemAPI, userAPI } from 'src/services/api'
 import ItemListDialog from 'src/components/ItemListDialog.vue'
 import UserListDialog from 'src/components/UserListDialog.vue'
 import RoleManageDialog from 'src/components/RoleManageDialog.vue'
@@ -233,12 +233,34 @@ onMounted(async () => {
     return
   }
   try {
-    const data = await adminAPI.getStats()
-    statsList.value[0].value = data.itemCount
-    statsList.value[1].value = data.userCount
-    statsList.value[2].value = data.solvedCount
-    statsList.value[3].value = data.pendingCount
+    // 加载统计数据 - 简单方式
+    // 实际项目中可能需要调用后端统计接口
+    const itemsResponse = await itemAPI.getItems({ page: 0, size: 1 })
+    const usersResponse = await userAPI.getUserList({ page: 0, size: 1 })
+
+    if (itemsResponse.success && itemsResponse.data) {
+      statsList.value[0].value = itemsResponse.data.totalElements || 0
+
+      // 已解决和待处理的数量需要额外查询
+      const solvedItems = await itemAPI.getItems({ status: '已找到', page: 0, size: 1 })
+      const pendingItems = await itemAPI.getItems({ status: '待审核', page: 0, size: 1 })
+
+      if (solvedItems.success && solvedItems.data) {
+        statsList.value[2].value = solvedItems.data.totalElements || 0
+      }
+
+      if (pendingItems.success && pendingItems.data) {
+        statsList.value[3].value = pendingItems.data.totalElements || 0
+      }
+    }
+
+    if (usersResponse.success && usersResponse.data) {
+      statsList.value[1].value = usersResponse.data.totalItems || 0
+    }
+
+    console.log('✅ 管理页面统计数据加载成功')
   } catch (e) {
+    console.error('❌ 获取统计数据失败:', e)
     $q.notify({ type: 'negative', message: '获取统计数据失败: ' + (e.message || e) })
   }
 })
@@ -302,23 +324,52 @@ const activityLogs = () => {
   $q.notify({ type: 'info', message: '操作日志功能开发中...' })
 }
 
-// 新增：处理物品状态修改
-const handleUpdateItemStatus = async (itemId, newStatus) => {
+// 处理物品状态修改
+const handleUpdateItemStatus = async (itemId, newStatus, rejectionReason = null) => {
   try {
-    const response = await adminAPI.updateItemStatus(itemId, newStatus)
+    console.log('📝 更新物品状态:', { itemId, newStatus, rejectionReason })
+    const response = await itemAPI.updateItemStatus(itemId, newStatus, rejectionReason)
     if (response.success) {
-      $q.notify({ type: 'positive', message: '物品状态已更新' })
+      $q.notify({
+        type: 'positive',
+        message: '物品状态已更新',
+        position: 'top'
+      })
+
       // 刷新统计数据
-      const data = await adminAPI.getStats()
-      statsList.value[0].value = data.itemCount
-      statsList.value[1].value = data.userCount
-      statsList.value[2].value = data.solvedCount
-      statsList.value[3].value = data.pendingCount
+      try {
+        const itemsResponse = await itemAPI.getItems({ page: 0, size: 1 })
+        const solvedItems = await itemAPI.getItems({ status: '已找到', page: 0, size: 1 })
+        const pendingItems = await itemAPI.getItems({ status: '待审核', page: 0, size: 1 })
+
+        if (itemsResponse.success) {
+          statsList.value[0].value = itemsResponse.data.totalElements || 0
+        }
+
+        if (solvedItems.success) {
+          statsList.value[2].value = solvedItems.data.totalElements || 0
+        }
+
+        if (pendingItems.success) {
+          statsList.value[3].value = pendingItems.data.totalElements || 0
+        }
+      } catch (e) {
+        console.error('❌ 刷新统计数据失败:', e)
+      }
     } else {
-      $q.notify({ type: 'negative', message: response.message || '物品状态更新失败' })
+      $q.notify({
+        type: 'negative',
+        message: response.message || '物品状态更新失败',
+        position: 'top'
+      })
     }
   } catch (e) {
-    $q.notify({ type: 'negative', message: '物品状态更新失败: ' + (e.message || e) })
+    console.error('❌ 物品状态更新失败:', e)
+    $q.notify({
+      type: 'negative',
+      message: '物品状态更新失败: ' + (e.message || e),
+      position: 'top'
+    })
   }
 }
 </script>

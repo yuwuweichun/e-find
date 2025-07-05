@@ -2,16 +2,15 @@
   <div class="row justify-center q-gutter-md">
     <q-card class="my-card q-mb-xl" bordered>
       <!-- 物品图片，如果有图片则显示，否则显示默认图片 -->
-      <q-img :src="getImgUrl(item) || defaultImg" :ratio="16 / 9" style="min-height: 120px;"
-        @error="() => { console.log('图片加载失败', getImgUrl(item)) }" />
+      <q-img :src="getImgUrl(item) || defaultImg" :ratio="16 / 9" style="min-height: 120px;" @error="onImageError" />
 
       <q-card-section>
         <!-- 发布时间 -->
-        <div class="text-overline text-orange-9">{{ formatDateTime(item.posted_date) }}</div>
+        <div class="text-overline text-orange-9">{{ formatDateTime(item.postedDate || item.posted_date) }}</div>
         <!-- 物品标题 -->
         <div class="text-h5 q-mt-sm q-mb-xs">{{ item.title }}</div>
         <!-- 物品类型 -->
-        <div class="text-caption text-blue">类型：{{ item.type === 'lost' ? '丢失' : '招领' }}</div>
+        <div class="text-caption text-blue">类型：{{ getTypeText(item.type) }}</div>
         <!-- 物品描述 -->
         <div class="text-caption text-grey">{{ item.description }}</div>
       </q-card-section>
@@ -33,19 +32,19 @@
           </q-card-section>
           <!-- 丢失/招领日期 -->
           <q-card-section class="text-subtitle2">
-            拾失日期：{{ formatDate(item.lost_date) }}
+            拾失日期：{{ formatDate(item.lostDate || item.lost_date) }}
           </q-card-section>
           <!-- 联系方式 -->
           <q-card-section class="text-subtitle2">
-            联系方式：{{ item.contact_info || '无' }}
+            联系方式：{{ item.contactInfo || item.contact_info || '无' }}
           </q-card-section>
           <!-- 审核状态 -->
           <q-card-section class="text-subtitle2">
-            状态：{{ statusText }}
+            状态：{{ item.status }}
           </q-card-section>
           <!-- 如果被拒绝，显示原因 -->
-          <q-card-section v-if="item.status === 'rejected'" class="text-negative">
-            拒绝原因：{{ item.rejection_reason }}
+          <q-card-section v-if="item.status === '未通过'" class="text-negative">
+            拒绝原因：{{ item.rejectionReason || '未提供' }}
           </q-card-section>
         </div>
       </q-slide-transition>
@@ -54,7 +53,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import defaultImg from '@/assets/images/default_item_photo.png'
 
 const props = defineProps({
@@ -76,6 +75,7 @@ function formatDateTime(dateStr) {
   const s = String(date.getSeconds()).padStart(2, '0')
   return `${y}-${m}-${d} ${h}:${min}:${s}`
 }
+
 // 只显示年月日
 function formatDate(dateStr) {
   if (!dateStr) return '未知'
@@ -86,38 +86,104 @@ function formatDate(dateStr) {
   return `${y}-${m}-${d}`
 }
 
-console.log('ECard item:', props.item)
-const expanded = ref(false)
-// 状态文字
-const statusText = computed(() => {
-  switch (props.item.status) {
-    case 'pending': return '待审核'
-    case 'approved': return '已通过'
-    case 'rejected': return '已拒绝'
-    case 'finished': return '已结束'
-    default: return '未知'
-  }
-})
-// 复制联系方式
-function copyContact() {
-  if (props.item.contact_info) {
-    navigator.clipboard.writeText(props.item.contact_info)
+// 处理物品类型文字
+function getTypeText(type) {
+  switch (type) {
+    case 'lost': return '丢失'
+    case 'found': return '招领'
+    default: return type || '未知'
   }
 }
+
+// 图片加载错误处理
+function onImageError(e) {
+  console.error('图片加载失败:', e.target.src)
+  // 直接使用导入的默认图片，确保不使用相对路径
+  e.target.src = defaultImg
+  // 防止循环触发error事件
+  e.target.onerror = null
+}
+
+const expanded = ref(false)
+
+// 复制联系方式
+function copyContact() {
+  const contactInfo = props.item.contactInfo || props.item.contact_info
+  if (contactInfo) {
+    navigator.clipboard.writeText(contactInfo)
+      .then(() => {
+        // 可以使用Quasar通知用户复制成功
+        console.log('联系方式已复制:', contactInfo)
+      })
+      .catch(err => {
+        console.error('复制失败:', err)
+      })
+  }
+}
+
 // 获取图片url
 function getImgUrl(item) {
+  // 检查新API的photos字段
   if (Array.isArray(item.photos) && item.photos.length > 0) {
-    return item.photos[0]
+    // 确保我们使用完整的图片URL
+    let photoUrl = item.photos[0]
+
+    // 如果photoUrl是对象格式(如{id:3, url:'...'})，则取出url属性
+    if (photoUrl && typeof photoUrl === 'object' && photoUrl.url) {
+      photoUrl = photoUrl.url
+    }
+
+    if (photoUrl && typeof photoUrl === 'string' && !photoUrl.startsWith('http')) {
+      photoUrl = `http://192.168.188.46:8080${photoUrl}`
+    }
+
+    return typeof photoUrl === 'string' ? photoUrl : null
   }
+
+  // 兼容旧API的字符串形式photos
   if (typeof item.photos === 'string') {
     try {
       const arr = JSON.parse(item.photos)
-      if (Array.isArray(arr) && arr.length > 0) return arr[0]
-    } catch { /* ignore JSON parse error */ }
+      if (Array.isArray(arr) && arr.length > 0) {
+        let photoUrl = arr[0]
+
+        // 如果photoUrl是对象格式，则取出url属性
+        if (photoUrl && typeof photoUrl === 'object' && photoUrl.url) {
+          photoUrl = photoUrl.url
+        }
+
+        if (photoUrl && typeof photoUrl === 'string' && !photoUrl.startsWith('http')) {
+          photoUrl = `http://192.168.188.46:8080${photoUrl}`
+        }
+
+        return typeof photoUrl === 'string' ? photoUrl : null
+      }
+    } catch {
+      // 如果直接是URL字符串，直接返回
+      if (item.photos && typeof item.photos === 'string') {
+        return item.photos.startsWith('http') ? item.photos : `http://192.168.188.46:8080${item.photos}`
+      }
+    }
   }
-  if (item.photo_url) return item.photo_url
-  if (item.photoUrl) return item.photoUrl
-  // 兜底：返回 null，外层用 || defaultImg
+
+  // 检查其他可能的字段名
+  if (item.photo_url) {
+    let photoUrl = item.photo_url
+    if (photoUrl && typeof photoUrl === 'string' && !photoUrl.startsWith('http')) {
+      photoUrl = `http://192.168.188.46:8080${photoUrl}`
+    }
+    return typeof photoUrl === 'string' ? photoUrl : null
+  }
+
+  if (item.photoUrl) {
+    let photoUrl = item.photoUrl
+    if (photoUrl && typeof photoUrl === 'string' && !photoUrl.startsWith('http')) {
+      photoUrl = `http://192.168.188.46:8080${photoUrl}`
+    }
+    return typeof photoUrl === 'string' ? photoUrl : null
+  }
+
+  // 兜底：返回null，外层用 || defaultImg
   return null
 }
 </script>

@@ -74,19 +74,30 @@ const selectedDate = ref('') // 日期字符串，格式如 '2024-07-01'
 
 // 计算属性：筛选后的失物
 const filteredItems = computed(() => {
+  if (!Array.isArray(items.value)) {
+    console.error('items不是数组:', items.value)
+    return []
+  }
+
   const keyword = search.value.trim().toLowerCase()
   return items.value.filter(item => {
-    // 只显示状态为approved或finished的失物
-    if (item.status !== 'approved' && item.status !== 'finished') return false
+    // 适配新后端的状态字段
+    // 只显示状态为"已通过"或"已找到"的物品
+    if (item.status !== '已通过' && item.status !== '已找到') return false
+
     // 关键词匹配（title/location）
     const matchKeyword =
       !keyword ||
       (item.title && item.title.toLowerCase().includes(keyword)) ||
       (item.location && item.location.toLowerCase().includes(keyword))
-    // 日期匹配（posted_date 只取日期部分）
+
+    // 适配新后端的日期字段 postedDate
+    // 日期匹配（只取日期部分）
+    const itemDate = item.postedDate || item.posted_date || ''
     const matchDate =
       !selectedDate.value ||
-      (item.posted_date && item.posted_date.slice(0, 10) === selectedDate.value)
+      (itemDate && itemDate.slice(0, 10) === selectedDate.value)
+
     return matchKeyword && matchDate
   })
 })
@@ -106,9 +117,22 @@ async function fetchItems() {
   error.value = null
   try {
     const res = await itemAPI.getItems()
-    items.value = res.items || res
+    console.log('获取物品返回数据:', res)
+    if (res.success && res.data) {
+      // 处理新API返回的分页数据结构
+      if (res.data.content) {
+        items.value = res.data.content
+      } else {
+        items.value = Array.isArray(res.data) ? res.data : []
+      }
+    } else {
+      items.value = []
+      throw new Error('加载失败')
+    }
   } catch (err) {
+    console.error('加载物品列表失败:', err)
     error.value = err.message || '加载失败'
+    items.value = []  // 确保在失败情况下items是空数组
   } finally {
     loading.value = false
   }
